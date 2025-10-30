@@ -3,16 +3,18 @@
 namespace SocialDept\Signal\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use SocialDept\Signal\Services\JetstreamConsumer;
 
+/**
+ * @method static void start(?int $cursor = null)
+ * @method static void stop()
+ *
+ * @see \SocialDept\Signal\Services\JetstreamConsumer
+ */
 class Signal extends Facade
 {
-    /**
-     * Get the registered name of the component.
-     *
-     * @return string
-     */
     protected static function getFacadeAccessor(): string
     {
-        return 'signal';
+        return JetstreamConsumer::class;
     }
 }

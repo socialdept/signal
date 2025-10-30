@@ -4,6 +4,7 @@ namespace SocialDept\Signal\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use InvalidArgumentException;
 use SocialDept\Signal\Signals\Signal;
 
 class SignalRegistry
@@ -21,7 +22,7 @@ class SignalRegistry
     public function register(string $signalClass): void
     {
         if (! is_subclass_of($signalClass, Signal::class)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Signal class must extend '.Signal::class
             );
         }

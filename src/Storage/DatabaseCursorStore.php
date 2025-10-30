@@ -2,6 +2,7 @@
 
 namespace SocialDept\Signal\Storage;
 
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use SocialDept\Signal\Contracts\CursorStore;
 
@@ -44,7 +45,7 @@ class DatabaseCursorStore implements CursorStore
             ->delete();
     }
 
-    protected function query()
+    protected function query(): Builder
     {
         return DB::connection($this->connection)
             ->table($this->table);

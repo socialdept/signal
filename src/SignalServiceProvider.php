@@ -3,80 +3,85 @@
 namespace SocialDept\Signal;
 
 use Illuminate\Support\ServiceProvider;
+use SocialDept\Signal\Commands\ConsumeCommand;
+use SocialDept\Signal\Commands\InstallCommand;
+use SocialDept\Signal\Commands\ListSignalsCommand;
+use SocialDept\Signal\Commands\MakeSignalCommand;
+use SocialDept\Signal\Commands\TestSignalCommand;
+use SocialDept\Signal\Contracts\CursorStore;
+use SocialDept\Signal\Services\EventDispatcher;
+use SocialDept\Signal\Services\JetstreamConsumer;
+use SocialDept\Signal\Services\SignalRegistry;
+use SocialDept\Signal\Storage\DatabaseCursorStore;
+use SocialDept\Signal\Storage\FileCursorStore;
+use SocialDept\Signal\Storage\RedisCursorStore;
 
 class SignalServiceProvider extends ServiceProvider
 {
-    /**
-     * Perform post-registration booting of services.
-     *
-     * @return void
-     */
-    public function boot(): void
-    {
-        // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'social-dept');
-        // $this->loadViewsFrom(__DIR__.'/../resources/views', 'social-dept');
-        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        // $this->loadRoutesFrom(__DIR__.'/routes.php');
-
-        // Publishing is only necessary when using the CLI.
-        if ($this->app->runningInConsole()) {
-            $this->bootForConsole();
-        }
-    }
-
-    /**
-     * Register any package services.
-     *
-     * @return void
-     */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/signal.php', 'signal');
+        $this->mergeConfigFrom(__DIR__ . '/../config/signal.php', 'signal');
 
-        // Register the service the package provides.
-        $this->app->singleton('signal', function ($app) {
-            return new Signal;
+        // Register cursor store
+        $this->app->singleton(CursorStore::class, function ($app) {
+            return match (config('signal.cursor_storage')) {
+                'redis' => new RedisCursorStore(),
+                'file' => new FileCursorStore(),
+                default => new DatabaseCursorStore(),
+            };
+        });
+
+        // Register signal registry
+        $this->app->singleton(SignalRegistry::class, function ($app) {
+            $registry = new SignalRegistry();
+
+            // Register configured signals
+            foreach (config('signal.signals', []) as $signal) {
+                $registry->register($signal);
+            }
+
+            return $registry;
+        });
+
+        // Register event dispatcher
+        $this->app->singleton(EventDispatcher::class, function ($app) {
+            return new EventDispatcher($app->make(SignalRegistry::class));
+        });
+
+        // Register Jetstream consumer
+        $this->app->singleton(JetstreamConsumer::class, function ($app) {
+            return new JetstreamConsumer(
+                $app->make(CursorStore::class),
+                $app->make(SignalRegistry::class),
+                $app->make(EventDispatcher::class),
+            );
         });
     }
 
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
+    public function boot(): void
     {
-        return ['signal'];
-    }
+        if ($this->app->runningInConsole()) {
+            // Publish config
+            $this->publishes([
+                __DIR__ . '/../config/signal.php' => config_path('signal.php'),
+            ], 'signal-config');
 
-    /**
-     * Console-specific booting.
-     *
-     * @return void
-     */
-    protected function bootForConsole(): void
-    {
-        // Publishing the configuration file.
-        $this->publishes([
-            __DIR__.'/../config/signal.php' => config_path('signal.php'),
-        ], 'signal.config');
+            // Publish migrations
+            $this->publishes([
+                __DIR__ . '/../database/migrations' => database_path('migrations'),
+            ], 'signal-migrations');
 
-        // Publishing the views.
-        /*$this->publishes([
-            __DIR__.'/../resources/views' => base_path('resources/views/vendor/social-dept'),
-        ], 'signal.views');*/
+            // Register commands
+            $this->commands([
+                InstallCommand::class,
+                ConsumeCommand::class,
+                ListSignalsCommand::class,
+                MakeSignalCommand::class,
+                TestSignalCommand::class,
+            ]);
+        }
 
-        // Publishing assets.
-        /*$this->publishes([
-            __DIR__.'/../resources/assets' => public_path('vendor/social-dept'),
-        ], 'signal.assets');*/
-
-        // Publishing the translation files.
-        /*$this->publishes([
-            __DIR__.'/../resources/lang' => resource_path('lang/vendor/social-dept'),
-        ], 'signal.lang');*/
-
-        // Registering package commands.
-        // $this->commands([]);
+        // Load migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 }

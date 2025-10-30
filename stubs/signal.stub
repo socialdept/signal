@@ -1,0 +1,63 @@
+<?php
+
+namespace {{ namespace }};
+
+use SocialDept\Signal\Events\SignalEvent;
+use SocialDept\Signal\Signals\Signal;
+
+class {{ class }} extends Signal
+{
+    /**
+     * Define which event types to listen for.
+     */
+    public function eventTypes(): array
+    {
+        return ['{{ eventType }}'];
+    }
+
+    /**
+     * Define collections to watch (optional, null = all).
+     *
+     * Supports wildcards:
+     * - ['app.bsky.feed.post'] - Only posts
+     * - ['app.bsky.feed.*'] - All feed collections
+     * - ['app.bsky.graph.*'] - All graph collections
+     */
+    public function collections(): ?array
+    {
+        return ['{{ collection }}'];
+    }
+
+    /**
+     * Handle the SignalEvent.
+     */
+    public function handle(SignalEvent $event): void
+    {
+        // Handle the event here
+
+        // Example: Access commit data
+        if ($event->isCommit()) {
+            $record = $event->getRecord();
+            $operation = $event->getOperation();
+            $collection = $event->getCollection();
+
+            // Your logic here
+        }
+    }
+
+    /**
+     * Determine if this signal should handle the event.
+     */
+    public function shouldHandle(SignalEvent $event): bool
+    {
+        return true;
+    }
+
+    /**
+     * Should this signal be queued?
+     */
+    public function shouldQueue(): bool
+    {
+        return false;
+    }
+}

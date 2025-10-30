@@ -1,0 +1,375 @@
+<?php
+
+namespace SocialDept\Signal\Services;
+
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use Revolution\Bluesky\Core\CAR;
+use Revolution\Bluesky\Core\CBOR;
+use SocialDept\Signal\Contracts\CursorStore;
+use SocialDept\Signal\Events\CommitEvent;
+use SocialDept\Signal\Events\SignalEvent;
+use SocialDept\Signal\Exceptions\ConnectionException;
+use SocialDept\Signal\Support\WebSocketConnection;
+
+class FirehoseConsumer
+{
+    protected CursorStore $cursorStore;
+
+    protected SignalRegistry $signalRegistry;
+
+    protected EventDispatcher $eventDispatcher;
+
+    protected ?WebSocketConnection $connection = null;
+
+    protected int $reconnectAttempts = 0;
+
+    protected bool $shouldStop = false;
+
+    public function __construct(
+        CursorStore $cursorStore,
+        SignalRegistry $signalRegistry,
+        EventDispatcher $eventDispatcher
+    ) {
+        $this->cursorStore = $cursorStore;
+        $this->signalRegistry = $signalRegistry;
+        $this->eventDispatcher = $eventDispatcher;
+    }
+
+    /**
+     * Start consuming the Firehose.
+     */
+    public function start(?int $cursor = null): void
+    {
+        $this->shouldStop = false;
+
+        // Get cursor from storage if not provided
+        if ($cursor === null) {
+            $cursor = $this->cursorStore->get();
+        }
+
+        $url = $this->buildWebSocketUrl($cursor);
+
+        Log::info('Signal: Starting Firehose consumer', [
+            'url' => $url,
+            'cursor' => $cursor,
+            'mode' => 'firehose',
+        ]);
+
+        $this->connect($url);
+    }
+
+    /**
+     * Stop consuming the Firehose.
+     */
+    public function stop(): void
+    {
+        $this->shouldStop = true;
+
+        if ($this->connection) {
+            $this->connection->close();
+        }
+
+        Log::info('Signal: Firehose consumer stopped');
+    }
+
+    /**
+     * Connect to the Firehose WebSocket.
+     */
+    protected function connect(string $url): void
+    {
+        $this->connection = new WebSocketConnection;
+
+        // Set up event handlers
+        $this->connection
+            ->onMessage(function (string $message) {
+                $this->handleMessage($message);
+            })
+            ->onClose(function (?int $code, ?string $reason) {
+                $this->handleClose($code, $reason);
+            })
+            ->onError(function (\Exception $e) {
+                $this->handleError($e);
+            });
+
+        // Connect to the WebSocket endpoint
+        $this->connection->connect($url)->then(
+            function () {
+                $this->reconnectAttempts = 0;
+                Log::info('Signal: Connected to Firehose successfully');
+            },
+            function (\Exception $e) {
+                Log::error('Signal: Could not connect to Firehose', [
+                    'error' => $e->getMessage(),
+                ]);
+
+                if (! $this->shouldStop) {
+                    $this->attemptReconnect();
+                }
+            }
+        );
+
+        // Run the event loop (blocking)
+        $this->connection->run();
+    }
+
+    /**
+     * Handle incoming WebSocket message (binary CBOR format).
+     */
+    protected function handleMessage(string $message): void
+    {
+        try {
+            // 1. Decode CBOR header
+            [$header, $remainder] = rescue(fn () => CBOR::decodeFirst($message), [[], '']);
+
+            if (! Arr::has($header, ['t', 'op'])) {
+                Log::debug('Signal: Invalid header', ['header' => $header]);
+
+                return;
+            }
+
+            if ($header['op'] !== 1) {
+                return;
+            }
+
+            $kind = $header['t'];
+
+            // 2. Decode CBOR payload
+            $payload = rescue(fn () => CBOR::decode($remainder ?? []));
+
+            if (! $payload) {
+                Log::warning('Signal: Failed to decode payload');
+
+                return;
+            }
+
+            // 3. Process based on kind
+            match ($kind) {
+                '#commit' => $this->handleCommit($payload),
+                '#identity' => $this->handleIdentity($payload),
+                '#account' => $this->handleAccount($payload),
+                default => null,
+            };
+
+        } catch (\Exception $e) {
+            Log::error('Signal: Error handling Firehose message', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle commit event from Firehose.
+     */
+    protected function handleCommit(array $payload): void
+    {
+        $required = ['seq', 'rebase', 'repo', 'commit', 'rev', 'since', 'blocks', 'ops', 'time'];
+        if (! Arr::has($payload, $required)) {
+            return;
+        }
+
+        $did = $payload['repo'];
+        $rev = $payload['rev'];
+        $time = $payload['time'];
+        $timeUs = $payload['seq'] ?? 0; // Use seq as time_us equivalent
+
+        // Parse CAR blocks
+        $records = $payload['blocks'];
+        $blocks = [];
+        if (! empty($records)) {
+            $blocks = rescue(fn () => iterator_to_array(CAR::blockMap($records)), []);
+        }
+
+        // Process operations
+        $ops = $payload['ops'];
+
+        foreach ($ops as $op) {
+            if (! Arr::has($op, ['cid', 'path', 'action'])) {
+                continue;
+            }
+
+            $action = $op['action'];
+            if (! in_array($action, ['create', 'update', 'delete'])) {
+                continue;
+            }
+
+            $cid = $op['cid'];
+            $path = $op['path'];
+            $collection = '';
+            $rkey = '';
+
+            if (str_contains($path, '/')) {
+                [$collection, $rkey] = explode('/', $path);
+            }
+
+            $record = $blocks[$path] ?? [];
+
+            // Convert to SignalEvent format for compatibility
+            $event = $this->buildSignalEvent($did, $timeUs, $action, $collection, $rkey, $rev, $cid, $record);
+
+            // Update cursor
+            $this->cursorStore->set($timeUs);
+
+            // Check if any signals match this event
+            $matchingSignals = $this->signalRegistry->getMatchingSignals($event);
+
+            if ($matchingSignals->isNotEmpty()) {
+                Log::info('Signal: Event matched', [
+                    'collection' => $collection,
+                    'operation' => $action,
+                    'matched_signals' => $matchingSignals->count(),
+                    'signal_names' => $matchingSignals->map(fn ($s) => class_basename($s))->join(', '),
+                ]);
+            }
+
+            // Dispatch to matching signals
+            $this->eventDispatcher->dispatch($event);
+        }
+    }
+
+    /**
+     * Build SignalEvent from Firehose data for compatibility.
+     */
+    protected function buildSignalEvent(
+        string $did,
+        int $timeUs,
+        string $operation,
+        string $collection,
+        string $rkey,
+        string $rev,
+        ?string $cid,
+        array $record
+    ): SignalEvent {
+        $recordValue = $record['value'] ?? null;
+
+        $commitEvent = new CommitEvent(
+            rev: $rev,
+            operation: $operation,
+            collection: $collection,
+            rkey: $rkey,
+            record: $recordValue ? (object) $recordValue : null,
+            cid: $cid
+        );
+
+        return new SignalEvent(
+            did: $did,
+            timeUs: $timeUs,
+            kind: 'commit',
+            commit: $commitEvent
+        );
+    }
+
+    /**
+     * Handle identity event from Firehose.
+     */
+    protected function handleIdentity(array $payload): void
+    {
+        // Identity events are received but not currently processed
+    }
+
+    /**
+     * Handle account event from Firehose.
+     */
+    protected function handleAccount(array $payload): void
+    {
+        // Account events are received but not currently processed
+    }
+
+    /**
+     * Handle WebSocket connection close.
+     */
+    protected function handleClose(?int $code, ?string $reason): void
+    {
+        Log::warning('Signal: Connection closed', [
+            'code' => $code,
+            'reason' => $reason ?: 'none',
+            'reconnect_attempts' => $this->reconnectAttempts,
+        ]);
+
+        // Attempt reconnection if enabled
+        if (! $this->shouldStop) {
+            $this->attemptReconnect();
+        }
+    }
+
+    /**
+     * Handle WebSocket connection error.
+     */
+    protected function handleError(\Exception $error): void
+    {
+        Log::error('Signal: Connection error', [
+            'error' => $error->getMessage(),
+            'trace' => $error->getTraceAsString(),
+        ]);
+    }
+
+    /**
+     * Attempt to reconnect to the Firehose with exponential backoff.
+     */
+    protected function attemptReconnect(): void
+    {
+        $maxAttempts = config('signal.connection.reconnect_attempts', 5);
+
+        if ($this->reconnectAttempts >= $maxAttempts) {
+            Log::error('Signal: Max reconnection attempts reached');
+            throw new ConnectionException('Failed to reconnect to Firehose after '.$maxAttempts.' attempts');
+        }
+
+        $this->reconnectAttempts++;
+
+        // Calculate exponential backoff delay
+        $baseDelay = config('signal.connection.reconnect_delay', 5);
+        $maxDelay = config('signal.connection.max_reconnect_delay', 60);
+
+        $delay = min(
+            $baseDelay * (2 ** ($this->reconnectAttempts - 1)),
+            $maxDelay
+        );
+
+        Log::info('Signal: Attempting to reconnect', [
+            'attempt' => $this->reconnectAttempts,
+            'max_attempts' => $maxAttempts,
+            'delay' => $delay,
+        ]);
+
+        sleep($delay);
+
+        $cursor = $this->cursorStore->get();
+        $url = $this->buildWebSocketUrl($cursor);
+
+        $this->connect($url);
+    }
+
+    /**
+     * Build the WebSocket URL with optional cursor.
+     * Note: Raw firehose does NOT support collection filtering.
+     */
+    protected function buildWebSocketUrl(?int $cursor = null): string
+    {
+        $host = config('signal.firehose.host', 'bsky.network');
+        $url = "wss://{$host}/xrpc/com.atproto.sync.subscribeRepos";
+
+        $params = [];
+
+        // Add cursor parameter if provided
+        if ($cursor !== null) {
+            $params[] = 'cursor='.$cursor;
+        }
+
+        if (! empty($params)) {
+            $url .= '?'.implode('&', $params);
+        }
+
+        Log::warning('Signal: Firehose mode - NO server-side collection filtering', [
+            'note' => 'All events will be received and filtered client-side',
+            'registered_collections' => $this->signalRegistry->all()
+                ->flatMap(fn ($signal) => $signal->collections() ?? [])
+                ->unique()
+                ->values()
+                ->toArray(),
+        ]);
+
+        return $url;
+    }
+}

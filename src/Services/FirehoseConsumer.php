@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Log;
 use Revolution\Bluesky\Core\CAR;
 use Revolution\Bluesky\Core\CBOR;
 use SocialDept\Signal\Contracts\CursorStore;
+use SocialDept\Signal\Events\AccountEvent;
 use SocialDept\Signal\Events\CommitEvent;
+use SocialDept\Signal\Events\IdentityEvent;
 use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Exceptions\ConnectionException;
 use SocialDept\Signal\Support\WebSocketConnection;
@@ -208,23 +210,11 @@ class FirehoseConsumer
             // Convert to SignalEvent format for compatibility
             $event = $this->buildSignalEvent($did, $timeUs, $action, $collection, $rkey, $rev, $cid, $record);
 
-            // Update cursor
-            $this->cursorStore->set($timeUs);
-
-            // Check if any signals match this event
-            $matchingSignals = $this->signalRegistry->getMatchingSignals($event);
-
-            if ($matchingSignals->isNotEmpty()) {
-                Log::info('Signal: Event matched', [
-                    'collection' => $collection,
-                    'operation' => $action,
-                    'matched_signals' => $matchingSignals->count(),
-                    'signal_names' => $matchingSignals->map(fn ($s) => class_basename($s))->join(', '),
-                ]);
-            }
-
-            // Dispatch to matching signals
-            $this->eventDispatcher->dispatch($event);
+            // Dispatch event with cursor update and logging
+            $this->dispatchSignalEvent($event, 'Commit', [
+                'collection' => $collection,
+                'operation' => $action,
+            ]);
         }
     }
 
@@ -261,11 +251,66 @@ class FirehoseConsumer
     }
 
     /**
+     * Dispatch a SignalEvent with cursor update and logging.
+     */
+    protected function dispatchSignalEvent(SignalEvent $event, string $eventType, array $context = []): void
+    {
+        // Update cursor
+        $this->cursorStore->set($event->timeUs);
+
+        // Check if any signals match this event
+        $matchingSignals = $this->signalRegistry->getMatchingSignals($event);
+
+        if ($matchingSignals->isNotEmpty()) {
+            Log::info("Signal: {$eventType} event matched", array_merge([
+                'matched_signals' => $matchingSignals->count(),
+                'signal_names' => $matchingSignals->map(fn ($s) => class_basename($s))->join(', '),
+            ], $context));
+        }
+
+        // Dispatch to matching signals
+        $this->eventDispatcher->dispatch($event);
+    }
+
+    /**
      * Handle identity event from Firehose.
      */
     protected function handleIdentity(array $payload): void
     {
-        // Identity events are received but not currently processed
+        // Validate required fields
+        if (! isset($payload['did'])) {
+            Log::debug('Signal: Invalid identity payload - missing did', ['payload' => $payload]);
+
+            return;
+        }
+
+        $did = $payload['did'];
+        $handle = $payload['handle'] ?? null;
+        $seq = $payload['seq'] ?? 0;
+        $time = $payload['time'] ?? null;
+        $timeUs = $seq; // Use seq as timeUs equivalent for cursor management
+
+        // Create IdentityEvent
+        $identityEvent = new IdentityEvent(
+            did: $did,
+            handle: $handle,
+            seq: $seq,
+            time: $time
+        );
+
+        // Create SignalEvent wrapper
+        $event = new SignalEvent(
+            did: $did,
+            timeUs: $timeUs,
+            kind: 'identity',
+            identity: $identityEvent
+        );
+
+        // Dispatch event with cursor update and logging
+        $this->dispatchSignalEvent($event, 'Identity', [
+            'did' => $did,
+            'handle' => $handle,
+        ]);
     }
 
     /**
@@ -273,7 +318,43 @@ class FirehoseConsumer
      */
     protected function handleAccount(array $payload): void
     {
-        // Account events are received but not currently processed
+        // Validate required fields
+        if (! isset($payload['did'], $payload['active'])) {
+            Log::debug('Signal: Invalid account payload - missing required fields', ['payload' => $payload]);
+
+            return;
+        }
+
+        $did = $payload['did'];
+        $active = (bool) $payload['active'];
+        $status = $payload['status'] ?? null;
+        $seq = $payload['seq'] ?? 0;
+        $time = $payload['time'] ?? null;
+        $timeUs = $seq; // Use seq as timeUs equivalent for cursor management
+
+        // Create AccountEvent
+        $accountEvent = new AccountEvent(
+            did: $did,
+            active: $active,
+            status: $status,
+            seq: $seq,
+            time: $time
+        );
+
+        // Create SignalEvent wrapper
+        $event = new SignalEvent(
+            did: $did,
+            timeUs: $timeUs,
+            kind: 'account',
+            account: $accountEvent
+        );
+
+        // Dispatch event with cursor update and logging
+        $this->dispatchSignalEvent($event, 'Account', [
+            'did' => $did,
+            'active' => $active,
+            'status' => $status,
+        ]);
     }
 
     /**

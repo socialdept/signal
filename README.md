@@ -31,6 +31,7 @@ Signal provides a clean, Laravel-style interface for consuming real-time events 
 * [Filtering Events](#filtering-events)
 * [Queue Integration](#queue-integration)
 * [Configuration](#configuration-1)
+* [Programmatic Usage](#programmatic-usage)
 * [Available Commands](#available-commands)
 * [Testing](#testing)
 * [External Resources](#external-resources)
@@ -601,6 +602,45 @@ Or manually register Signals:
     \App\Signals\NewPostSignal::class,
     \App\Signals\NewFollowSignal::class,
 ],
+```
+
+---
+
+## Programmatic Usage
+
+You can start and stop the consumer programmatically using the `Signal` facade:
+
+```php
+use SocialDept\Signal\Facades\Signal;
+
+// Start consuming events (uses mode from config)
+Signal::start();
+
+// Start from a specific cursor
+Signal::start(cursor: 123456789);
+
+// Check which mode is active
+$mode = Signal::getMode(); // Returns 'jetstream' or 'firehose'
+
+// Stop consuming events
+Signal::stop();
+```
+
+The facade automatically resolves the correct consumer (Jetstream or Firehose) based on your `config('signal.mode')` setting. This allows you to:
+
+- Switch between modes by changing configuration
+- Start consumers from application code (e.g., in a custom command)
+- Integrate Signal into existing application workflows
+
+```php
+// Example: Start consumer based on environment
+if (app()->environment('production')) {
+    config(['signal.mode' => 'jetstream']); // Use efficient Jetstream
+} else {
+    config(['signal.mode' => 'firehose']); // Use comprehensive Firehose for testing
+}
+
+Signal::start();
 ```
 
 ---

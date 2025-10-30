@@ -2,7 +2,9 @@
 
 namespace SocialDept\Signal\Events;
 
-class AccountEvent
+use SocialDept\Signal\Contracts\EventContract;
+
+class AccountEvent implements EventContract
 {
     public function __construct(
         public string $did,

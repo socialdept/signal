@@ -15,21 +15,36 @@ class InstallCommand extends Command
         $this->info('Installing Signal package...');
         $this->newLine();
 
-        // Publish config
+        $this->publishConfiguration();
+        $this->publishMigrations();
+        $this->runMigrations();
+
+        $this->displaySuccessMessage();
+        $this->displayNextSteps();
+
+        return self::SUCCESS;
+    }
+
+    private function publishConfiguration(): void
+    {
         $this->comment('Publishing configuration...');
         $this->call('vendor:publish', [
             '--tag' => 'signal-config',
         ]);
         $this->info('✓ Configuration published');
+    }
 
-        // Publish migrations
+    private function publishMigrations(): void
+    {
         $this->comment('Publishing migrations...');
         $this->call('vendor:publish', [
             '--tag' => 'signal-migrations',
         ]);
         $this->info('✓ Migrations published');
+    }
 
-        // Run migrations
+    private function runMigrations(): void
+    {
         $this->newLine();
         $this->comment('Running migrations...');
 
@@ -39,17 +54,20 @@ class InstallCommand extends Command
         } else {
             $this->warn('⚠ Skipped migrations. Run "php artisan migrate" manually when ready.');
         }
+    }
 
+    private function displaySuccessMessage(): void
+    {
         $this->newLine();
         $this->info('Signal package installed successfully!');
         $this->newLine();
+    }
 
-        // Show next steps
+    private function displayNextSteps(): void
+    {
         $this->line('Next steps:');
         $this->line('1. Review the config file: config/signal.php');
         $this->line('2. Create your first signal: php artisan make:signal NewPostSignal');
         $this->line('3. Start consuming events: php artisan signal:consume');
-
-        return self::SUCCESS;
     }
 }

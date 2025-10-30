@@ -2,6 +2,8 @@
 
 namespace SocialDept\Signal\Commands;
 
+use BackedEnum;
+use Exception;
 use Illuminate\Console\Command;
 use SocialDept\Signal\Services\FirehoseConsumer;
 use SocialDept\Signal\Services\JetstreamConsumer;
@@ -18,34 +20,63 @@ class ConsumeCommand extends Command
 
     public function handle(SignalRegistry $registry): int
     {
-        // Determine mode
-        $mode = $this->option('mode') ?? config('signal.mode', 'jetstream');
+        $mode = $this->determineMode();
 
-        if (! in_array($mode, ['jetstream', 'firehose'])) {
-            $this->error("Invalid mode: {$mode}. Must be 'jetstream' or 'firehose'.");
-
+        if ($mode === null) {
             return self::FAILURE;
         }
 
         $this->info("Signal: Initializing {$mode} consumer...");
 
-        // Discover signals
+        if (! $this->discoverAndValidateSignals($registry)) {
+            return self::FAILURE;
+        }
+
+        $this->displayRegisteredSignals($registry);
+        $this->displayModeInformation($mode);
+
+        $cursor = $this->determineCursor();
+
+        return $this->startConsumer($mode, $cursor);
+    }
+
+    private function determineMode(): ?string
+    {
+        $mode = $this->option('mode') ?? config('signal.mode', 'jetstream');
+
+        if (! in_array($mode, ['jetstream', 'firehose'])) {
+            $this->error("Invalid mode: {$mode}. Must be 'jetstream' or 'firehose'.");
+
+            return null;
+        }
+
+        return $mode;
+    }
+
+    private function discoverAndValidateSignals(SignalRegistry $registry): bool
+    {
         $registry->discover();
 
         $signalCount = $registry->all()->count();
 
         if ($signalCount === 0) {
-            $this->warn('No signals registered. Create signals in app/Signals or register them in config/signal.php');
+            $this->warn('No signals registered. Create signals in `app/Signals` or register them in `config/signal.php`.');
 
-            return self::FAILURE;
+            return false;
         }
 
-        // List registered signals with a prettier display
+        return true;
+    }
+
+    private function displayRegisteredSignals(SignalRegistry $registry): void
+    {
+        $signalCount = $registry->all()->count();
+
         $this->newLine();
         $this->components->info("Found {$signalCount} ".str('signal')->plural($signalCount));
         $this->newLine();
 
-        $normalizeValue = fn ($value) => $value instanceof \BackedEnum ? $value->value : $value;
+        $normalizeValue = fn ($value) => $value instanceof BackedEnum ? $value->value : $value;
 
         foreach ($registry->all() as $signal) {
             $className = class_basename($signal);
@@ -66,8 +97,10 @@ class ConsumeCommand extends Command
         }
 
         $this->newLine();
+    }
 
-        // Show mode-specific information
+    private function displayModeInformation(string $mode): void
+    {
         if ($mode === 'jetstream') {
             $this->components->warn('Jetstream Mode: Server-side filtering (custom collections may not receive create/update)');
         } else {
@@ -75,19 +108,30 @@ class ConsumeCommand extends Command
         }
 
         $this->newLine();
+    }
 
-        // Determine cursor
-        $cursor = null;
+    private function determineCursor(): ?int
+    {
         if ($this->option('fresh')) {
             $this->info('Starting fresh from the beginning');
-        } elseif ($this->option('cursor')) {
-            $cursor = (int) $this->option('cursor');
-            $this->info("Starting from cursor: {$cursor}");
-        } else {
-            $this->info('Resuming from stored cursor position');
+
+            return null;
         }
 
-        // Resolve and start the appropriate consumer
+        if ($this->option('cursor')) {
+            $cursor = (int) $this->option('cursor');
+            $this->info("Starting from cursor: {$cursor}");
+
+            return $cursor;
+        }
+
+        $this->info('Resuming from stored cursor position');
+
+        return null;
+    }
+
+    private function startConsumer(string $mode, ?int $cursor): int
+    {
         $consumer = $mode === 'firehose'
             ? app(FirehoseConsumer::class)
             : app(JetstreamConsumer::class);
@@ -96,7 +140,7 @@ class ConsumeCommand extends Command
 
         try {
             $consumer->start($cursor);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error('Error: '.$e->getMessage());
 
             return self::FAILURE;

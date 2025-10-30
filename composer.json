@@ -1,6 +1,6 @@
 {
-    "name": "social-dept/signal",
-    "description": "Laravel package for building Signals that respond to AT Protocol Jetstream events",
+    "name": "socialdept/signal",
+    "description": "Build Reactive Signals for Bluesky's AT Protocol Firehose in Laravel",
     "type": "library",
     "license": "MIT",
     "require": {

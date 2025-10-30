@@ -47,7 +47,7 @@ Signal provides a clean, Laravel-style interface for consuming real-time events 
 Install the package via Composer:
 
 ```bash
-composer require social-dept/signal
+composer require socialdept/signal
 ```
 
 Run the installation command:

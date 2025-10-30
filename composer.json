@@ -1,0 +1,41 @@
+{
+    "name": "social-dept/signal",
+    "description": ":package_description",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Author Name",
+            "email": "author@email.com",
+            "homepage": "http://author.com"
+        }
+    ],
+    "homepage": "https://github.com/social-dept/signal",
+    "keywords": ["Laravel", "Signal"],
+    "require": {
+        "illuminate/support": "~9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~9.0",
+        "orchestra/testbench": "~7"
+    },
+    "autoload": {
+        "psr-4": {
+            "SocialDept\\Signal\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SocialDept\\Signal\\Tests\\": "tests"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SocialDept\\Signal\\SignalServiceProvider"
+            ],
+            "aliases": {
+                "Signal": "SocialDept\\Signal\\Facades\\Signal"
+            }
+        }
+    }
+}

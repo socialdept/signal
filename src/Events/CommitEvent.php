@@ -2,30 +2,39 @@
 
 namespace SocialDept\Signal\Events;
 
+use SocialDept\Signal\Enums\SignalCommitOperation;
+
 class CommitEvent
 {
+    public SignalCommitOperation $operation;
+
     public function __construct(
         public string $rev,
-        public string $operation, // 'create', 'update', 'delete'
+        string|SignalCommitOperation $operation,
         public string $collection,
         public string $rkey,
         public ?object $record = null,
         public ?string $cid = null,
-    ) {}
+    ) {
+        // Convert string to enum if needed
+        $this->operation = is_string($operation)
+            ? SignalCommitOperation::from($operation)
+            : $operation;
+    }
 
     public function isCreate(): bool
     {
-        return $this->operation === 'create';
+        return $this->operation === SignalCommitOperation::Create;
     }
 
     public function isUpdate(): bool
     {
-        return $this->operation === 'update';
+        return $this->operation === SignalCommitOperation::Update;
     }
 
     public function isDelete(): bool
     {
-        return $this->operation === 'delete';
+        return $this->operation === SignalCommitOperation::Delete;
     }
 
     public function uri(): string
@@ -49,7 +58,7 @@ class CommitEvent
     {
         return [
             'rev' => $this->rev,
-            'operation' => $this->operation,
+            'operation' => $this->operation->value,
             'collection' => $this->collection,
             'rkey' => $this->rkey,
             'record' => $this->record,

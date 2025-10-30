@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Signals\Signal;
 
 class ProcessSignalJob implements ShouldQueue
@@ -15,8 +15,8 @@ class ProcessSignalJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
-        protected Signal $signal,
-        protected JetstreamEvent $event,
+        protected Signal      $signal,
+        protected SignalEvent $event,
     ) {}
 
     public function handle(): void

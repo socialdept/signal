@@ -2,14 +2,14 @@
 
 namespace SocialDept\Signal\Signals;
 
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 
 abstract class Signal
 {
     /**
      * Define which event types to listen for.
      *
-     * @return array<string> ['commit', 'identity', 'account']
+     * @return array<string|\SocialDept\Signal\Enums\SignalEventType>
      */
     abstract public function eventTypes(): array;
 
@@ -31,6 +31,25 @@ abstract class Signal
     }
 
     /**
+     * Define operations to watch (optional, null = all).
+     *
+     * Only applies to 'commit' event types.
+     *
+     * Examples:
+     * - [SignalCommitOperation::Create] - Only handle creates
+     * - [SignalCommitOperation::Create, SignalCommitOperation::Update] - Handle creates and updates
+     * - ['create', 'update'] - Handle creates and updates (string format)
+     * - [SignalCommitOperation::Delete] - Only handle deletes
+     * - null - Handle all operations (default)
+     *
+     * @return array<string|\SocialDept\Signal\Enums\SignalCommitOperation>|null
+     */
+    public function operations(): ?array
+    {
+        return null;
+    }
+
+    /**
      * Define DIDs to watch (optional, null = all).
      *
      * @return array<string>|null
@@ -43,12 +62,12 @@ abstract class Signal
     /**
      * Handle the Jetstream event.
      */
-    abstract public function handle(JetstreamEvent $event): void;
+    abstract public function handle(SignalEvent $event): void;
 
     /**
      * Determine if this signal should handle the event.
      */
-    public function shouldHandle(JetstreamEvent $event): bool
+    public function shouldHandle(SignalEvent $event): bool
     {
         return true;
     }
@@ -79,8 +98,6 @@ abstract class Signal
 
     /**
      * Middleware to run before handling the event.
-     *
-     * @return array
      */
     public function middleware(): array
     {
@@ -90,7 +107,7 @@ abstract class Signal
     /**
      * Handle a failed signal execution.
      */
-    public function failed(JetstreamEvent $event, \Throwable $exception): void
+    public function failed(SignalEvent $event, \Throwable $exception): void
     {
         //
     }

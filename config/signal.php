@@ -3,6 +3,20 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Signal Mode
+    |--------------------------------------------------------------------------
+    |
+    | The mode determines which AT Protocol stream to consume:
+    | - 'jetstream': JSON events with server-side collection filtering
+    |                (only standard app.bsky.* collections get create/update)
+    | - 'firehose': Raw CBOR events with client-side filtering
+    |               (all collections including custom ones get all operations)
+    |
+    */
+    'mode' => env('SIGNAL_MODE', 'jetstream'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Jetstream WebSocket URL
     |--------------------------------------------------------------------------
     |
@@ -12,6 +26,19 @@ return [
     |
     */
     'websocket_url' => env('SIGNAL_JETSTREAM_URL', 'wss://jetstream2.us-east.bsky.network'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Firehose Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Raw AT Protocol firehose settings.
+    | Note: Firehose does NOT support server-side collection filtering.
+    |
+    */
+    'firehose' => [
+        'host' => env('SIGNAL_FIREHOSE_HOST', 'bsky.network'),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -90,8 +117,8 @@ return [
     */
     'connection' => [
         'reconnect_attempts' => 5,
-        'reconnect_delay' => 5, // seconds
-        'ping_interval' => 30, // seconds
+        'reconnect_delay' => 5, // Base delay in seconds (exponential backoff)
+        'max_reconnect_delay' => 60, // Maximum delay in seconds
         'timeout' => 60, // seconds
     ],
 

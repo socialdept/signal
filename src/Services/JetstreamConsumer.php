@@ -3,20 +3,23 @@
 namespace SocialDept\Signal\Services;
 
 use Illuminate\Support\Facades\Log;
-use Ratchet\Client\Connector;
-use Ratchet\Client\WebSocket;
-use React\EventLoop\Loop;
 use SocialDept\Signal\Contracts\CursorStore;
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Exceptions\ConnectionException;
+use SocialDept\Signal\Support\WebSocketConnection;
 
 class JetstreamConsumer
 {
     protected CursorStore $cursorStore;
+
     protected SignalRegistry $signalRegistry;
+
     protected EventDispatcher $eventDispatcher;
-    protected ?WebSocket $connection = null;
+
+    protected ?WebSocketConnection $connection = null;
+
     protected int $reconnectAttempts = 0;
+
     protected bool $shouldStop = false;
 
     public function __construct(
@@ -70,71 +73,74 @@ class JetstreamConsumer
      */
     protected function connect(string $url): void
     {
-        $loop = Loop::get();
-        $connector = new Connector($loop);
+        $this->connection = new WebSocketConnection;
 
-        $connector($url)->then(
-            function (WebSocket $conn) {
-                $this->connection = $conn;
+        // Set up event handlers
+        $this->connection
+            ->onMessage(function (string $message) {
+                $this->handleMessage($message);
+            })
+            ->onClose(function (?int $code, ?string $reason) {
+                $this->handleClose($code, $reason);
+            })
+            ->onError(function (\Exception $e) {
+                $this->handleError($e);
+            });
+
+        // Connect to the WebSocket endpoint
+        $this->connection->connect($url)->then(
+            function () {
                 $this->reconnectAttempts = 0;
-
-                Log::info('Signal: Connected to Jetstream');
-
-                $conn->on('message', function ($msg) {
-                    $this->handleMessage($msg);
-                });
-
-                $conn->on('close', function ($code, $reason) {
-                    Log::warning('Signal: Connection closed', [
-                        'code' => $code,
-                        'reason' => $reason,
-                    ]);
-
-                    if (!$this->shouldStop) {
-                        $this->attemptReconnect();
-                    }
-                });
-
-                $conn->on('error', function (\Exception $e) {
-                    Log::error('Signal: Connection error', [
-                        'error' => $e->getMessage(),
-                    ]);
-                });
-
-                // Setup ping interval to keep connection alive
-                $this->setupPingInterval($conn, $loop);
+                Log::info('Signal: Connected to Jetstream successfully');
             },
             function (\Exception $e) {
                 Log::error('Signal: Could not connect to Jetstream', [
                     'error' => $e->getMessage(),
                 ]);
 
-                if (!$this->shouldStop) {
+                if (! $this->shouldStop) {
                     $this->attemptReconnect();
                 }
             }
         );
 
-        $loop->run();
+        // Run the event loop (blocking)
+        $this->connection->run();
     }
 
     /**
      * Handle incoming WebSocket message.
      */
-    protected function handleMessage($message): void
+    protected function handleMessage(string $message): void
     {
         try {
             $data = json_decode($message, true);
 
-            if (!$data) {
+            if (! $data) {
                 Log::warning('Signal: Failed to decode message');
+
                 return;
             }
 
-            $event = JetstreamEvent::fromArray($data);
+            $event = SignalEvent::fromArray($data);
 
             // Update cursor
             $this->cursorStore->set($event->timeUs);
+
+            // Check if any signals match this event
+            $matchingSignals = $this->signalRegistry->getMatchingSignals($event);
+
+            if ($matchingSignals->isNotEmpty()) {
+                $collection = $event->getCollection() ?? $event->kind;
+                $operation = $event->getOperation() ?? 'event';
+
+                Log::info('Signal: Event matched', [
+                    'collection' => $collection,
+                    'operation' => $operation,
+                    'matched_signals' => $matchingSignals->count(),
+                    'signal_names' => $matchingSignals->map(fn ($s) => class_basename($s))->join(', '),
+                ]);
+            }
 
             // Dispatch to matching signals
             $this->eventDispatcher->dispatch($event);
@@ -148,23 +154,60 @@ class JetstreamConsumer
     }
 
     /**
-     * Attempt to reconnect to the Jetstream.
+     * Handle WebSocket connection close.
+     */
+    protected function handleClose(?int $code, ?string $reason): void
+    {
+        Log::warning('Signal: Connection closed', [
+            'code' => $code,
+            'reason' => $reason ?: 'none',
+            'reconnect_attempts' => $this->reconnectAttempts,
+        ]);
+
+        // Attempt reconnection if enabled
+        if (! $this->shouldStop) {
+            $this->attemptReconnect();
+        }
+    }
+
+    /**
+     * Handle WebSocket connection error.
+     */
+    protected function handleError(\Exception $error): void
+    {
+        Log::error('Signal: Connection error', [
+            'error' => $error->getMessage(),
+            'trace' => $error->getTraceAsString(),
+        ]);
+    }
+
+    /**
+     * Attempt to reconnect to the Jetstream with exponential backoff.
      */
     protected function attemptReconnect(): void
     {
         $maxAttempts = config('signal.connection.reconnect_attempts', 5);
-        $delay = config('signal.connection.reconnect_delay', 5);
 
         if ($this->reconnectAttempts >= $maxAttempts) {
             Log::error('Signal: Max reconnection attempts reached');
-            throw new ConnectionException('Failed to reconnect to Jetstream after ' . $maxAttempts . ' attempts');
+            throw new ConnectionException('Failed to reconnect to Jetstream after '.$maxAttempts.' attempts');
         }
 
         $this->reconnectAttempts++;
 
+        // Calculate exponential backoff delay
+        $baseDelay = config('signal.connection.reconnect_delay', 5);
+        $maxDelay = config('signal.connection.max_reconnect_delay', 60);
+
+        $delay = min(
+            $baseDelay * (2 ** ($this->reconnectAttempts - 1)),
+            $maxDelay
+        );
+
         Log::info('Signal: Attempting to reconnect', [
             'attempt' => $this->reconnectAttempts,
             'max_attempts' => $maxAttempts,
+            'delay' => $delay,
         ]);
 
         sleep($delay);
@@ -176,29 +219,41 @@ class JetstreamConsumer
     }
 
     /**
-     * Setup ping interval to keep connection alive.
-     */
-    protected function setupPingInterval(WebSocket $conn, $loop): void
-    {
-        $interval = config('signal.connection.ping_interval', 30);
-
-        $loop->addPeriodicTimer($interval, function () use ($conn) {
-            if ($conn->getReadyState() === WebSocket::STATE_OPEN) {
-                $conn->send(json_encode(['type' => 'ping']));
-            }
-        });
-    }
-
-    /**
-     * Build the WebSocket URL with optional cursor.
+     * Build the WebSocket URL with optional cursor and collection filters.
      */
     protected function buildWebSocketUrl(?int $cursor = null): string
     {
         $baseUrl = config('signal.websocket_url', 'wss://jetstream2.us-east.bsky.network');
-        $url = rtrim($baseUrl, '/') . '/subscribe';
+        $url = rtrim($baseUrl, '/').'/subscribe';
 
+        $params = [];
+
+        // Add cursor parameter if provided
         if ($cursor !== null) {
-            $url .= '?cursor=' . $cursor;
+            $params[] = 'cursor='.$cursor;
+        }
+
+        // Add collection filters from all registered signals
+        $collections = $this->signalRegistry->all()
+            ->flatMap(fn ($signal) => $signal->collections() ?? [])
+            ->unique()
+            ->filter()
+            ->values();
+
+        if ($collections->isNotEmpty()) {
+            foreach ($collections as $collection) {
+                $params[] = 'wantedCollections='.urlencode($collection);
+            }
+
+            Log::info('Signal: Collection filters applied', [
+                'collections' => $collections->toArray(),
+            ]);
+        } else {
+            Log::warning('Signal: No collection filters - will receive ALL events');
+        }
+
+        if (! empty($params)) {
+            $url .= '?'.implode('&', $params);
         }
 
         return $url;

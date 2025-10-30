@@ -17,17 +17,15 @@ class InstallCommand extends Command
 
         // Publish config
         $this->comment('Publishing configuration...');
-        $this->callSilently('vendor:publish', [
+        $this->call('vendor:publish', [
             '--tag' => 'signal-config',
-            '--force' => $this->option('force', false),
         ]);
         $this->info('✓ Configuration published');
 
         // Publish migrations
         $this->comment('Publishing migrations...');
-        $this->callSilently('vendor:publish', [
+        $this->call('vendor:publish', [
             '--tag' => 'signal-migrations',
-            '--force' => $this->option('force', false),
         ]);
         $this->info('✓ Migrations published');
 

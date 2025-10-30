@@ -1,16 +1,18 @@
 # Signal
 
-**Laravel package for building Signals that respond to AT Protocol Jetstream events**
+**Laravel package for building Signals that respond to AT Protocol events**
 
-Signal provides a clean, Laravel-style interface for consuming real-time events from the AT Protocol firehose (Jetstream). Build reactive applications that respond to posts, likes, follows, and other social interactions on the AT Protocol network.
+Signal provides a clean, Laravel-style interface for consuming real-time events from the AT Protocol. Supports both **Jetstream** (simplified JSON events) and **Firehose** (raw CBOR/CAR format) for maximum flexibility. Build reactive applications, AppViews, and custom indexers that respond to posts, likes, follows, and other social interactions on the AT Protocol network.
 
 ---
 
 ## Features
 
-- 🔌 **WebSocket Connection** - Connect to AT Protocol Jetstream with automatic reconnection
+- 🔄 **Dual-Mode Support** - Choose between Jetstream (JSON) or Firehose (CBOR/CAR) based on your needs
+- 🔌 **WebSocket Connection** - Connect to AT Protocol with automatic reconnection and exponential backoff
 - 🎯 **Signal-based Architecture** - Clean, testable event handlers (avoiding Laravel's "listener" naming collision)
 - ⭐ **Wildcard Collection Filtering** - Match multiple collections with patterns like `app.bsky.feed.*`
+- 🏗️ **AppView Ready** - Full support for custom collections and building AT Protocol AppViews
 - 💾 **Cursor Management** - Resume from last position after disconnections (Database, Redis, or File storage)
 - ⚡ **Queue Integration** - Process events asynchronously with Laravel queues
 - 🔍 **Auto-Discovery** - Automatically find and register Signals in `app/Signals`
@@ -21,16 +23,22 @@ Signal provides a clean, Laravel-style interface for consuming real-time events 
 
 ## Table of Contents
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Creating Signals](#creating-signals)
-- [Filtering Events](#filtering-events)
-- [Queue Integration](#queue-integration)
-- [Configuration](#configuration)
-- [Available Commands](#available-commands)
-- [Testing](#testing)
-- [Documentation](#documentation)
-- [License](#license)
+<!-- TOC -->
+* [Installation](#installation)
+* [Quick Start](#quick-start)
+* [Jetstream vs Firehose](#jetstream-vs-firehose)
+* [Creating Signals](#creating-signals)
+* [Filtering Events](#filtering-events)
+* [Queue Integration](#queue-integration)
+* [Configuration](#configuration-1)
+* [Available Commands](#available-commands)
+* [Testing](#testing)
+* [External Resources](#external-resources)
+* [Examples](#examples)
+* [Requirements](#requirements)
+* [License](#license)
+* [Support](#support)
+<!-- TOC -->
 
 ---
 
@@ -81,7 +89,7 @@ This creates `app/Signals/NewPostSignal.php`:
 
 namespace App\Signals;
 
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Signals\Signal;
 
 class NewPostSignal extends Signal
@@ -96,7 +104,7 @@ class NewPostSignal extends Signal
         return ['app.bsky.feed.post'];
     }
 
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         $record = $event->getRecord();
 
@@ -118,6 +126,84 @@ Your Signal will now respond to new posts on the AT Protocol network in real-tim
 
 ---
 
+## Jetstream vs Firehose
+
+Signal supports two modes for consuming AT Protocol events. Choose based on your use case:
+
+### Jetstream Mode (Default)
+
+**Best for**: Standard Bluesky collections, production efficiency, lower bandwidth
+
+```bash
+php artisan signal:consume --mode=jetstream
+```
+
+**Characteristics:**
+- ✅ Simplified JSON events (easy to work with)
+- ✅ Server-side collection filtering (efficient)
+- ✅ Lower bandwidth and processing overhead
+- ⚠️ Only standard `app.bsky.*` collections get create/update operations
+- ⚠️ Custom collections only receive delete operations
+
+**Jetstream URL options:**
+- US East: `wss://jetstream2.us-east.bsky.network` (default)
+- US West: `wss://jetstream1.us-west.bsky.network`
+
+### Firehose Mode
+
+**Best for**: Custom collections, AppViews, comprehensive indexing
+
+```bash
+php artisan signal:consume --mode=firehose
+```
+
+**Characteristics:**
+- ✅ **All operations** (create, update, delete) for **all collections**
+- ✅ Perfect for custom collections (e.g., `app.yourapp.*.collection`)
+- ✅ Full CBOR/CAR decoding with package `revolution/laravel-bluesky`
+- ⚠️ Client-side filtering only (higher bandwidth)
+- ⚠️ More processing overhead
+
+**When to use Firehose:**
+- Building an AT Protocol AppView
+- Working with custom collections
+- Need create/update events for non-standard collections
+- Building comprehensive indexes
+
+### Configuration
+
+Set your preferred mode in `.env`:
+
+```env
+# Use Jetstream (default)
+SIGNAL_MODE=jetstream
+
+# Or use Firehose for custom collections
+SIGNAL_MODE=firehose
+```
+
+### Example: Custom Collections
+
+If you're tracking custom collections like `app.offprint.beta.publication`, you **must** use Firehose mode:
+
+```php
+class PublicationSignal extends Signal
+{
+    public function collections(): ?array
+    {
+        return ['app.offprint.beta.publication'];
+    }
+
+    public function handle(SignalEvent $event): void
+    {
+        // With Jetstream: Only sees deletes ❌
+        // With Firehose: Sees creates, updates, deletes ✅
+    }
+}
+```
+
+---
+
 ## Creating Signals
 
 ### Basic Signal Structure
@@ -125,7 +211,8 @@ Your Signal will now respond to new posts on the AT Protocol network in real-tim
 Every Signal extends the base `Signal` class and must implement:
 
 ```php
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Enums\SignalEventType;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Signals\Signal;
 
 class MySignal extends Signal
@@ -133,31 +220,38 @@ class MySignal extends Signal
     // Required: Define which event types to listen for
     public function eventTypes(): array
     {
-        return ['commit']; // 'commit', 'identity', or 'account'
+        return [SignalEventType::Commit];
+
+        // Or use strings:
+        // return ['commit'];
     }
 
     // Required: Handle the event
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         // Your logic here
     }
 }
 ```
 
+**Enums vs Strings**: Signal supports both typed enums and strings for better IDE support and type safety. Use whichever you prefer!
+
 ### Event Types
 
 Three event types are available:
 
-| Type | Description | Use Cases |
-|------|-------------|-----------|
-| `commit` | Repository commits (posts, likes, follows, etc.) | Content creation, social interactions |
-| `identity` | Identity changes (handle updates) | User profile tracking |
-| `account` | Account status changes | Account monitoring |
+| Enum                        | String       | Description                                      | Use Cases                             |
+|-----------------------------|--------------|--------------------------------------------------|---------------------------------------|
+| `SignalEventType::Commit`   | `'commit'`   | Repository commits (posts, likes, follows, etc.) | Content creation, social interactions |
+| `SignalEventType::Identity` | `'identity'` | Identity changes (handle updates)                | User profile tracking                 |
+| `SignalEventType::Account`  | `'account'`  | Account status changes                           | Account monitoring                    |
 
 ### Accessing Event Data
 
 ```php
-public function handle(JetstreamEvent $event): void
+use SocialDept\Signal\Enums\SignalCommitOperation;
+
+public function handle(SignalEvent $event): void
 {
     // Common properties
     $did = $event->did;           // User's DID
@@ -167,9 +261,17 @@ public function handle(JetstreamEvent $event): void
     // Commit events
     if ($event->isCommit()) {
         $collection = $event->getCollection();  // e.g., 'app.bsky.feed.post'
-        $operation = $event->getOperation();    // 'create', 'update', or 'delete'
+        $operation = $event->getOperation();    // SignalCommitOperation enum
         $record = $event->getRecord();          // The actual record data
         $rkey = $event->commit->rkey;           // Record key
+
+        // Use enum for type-safe comparisons
+        if ($operation === SignalCommitOperation::Create) {
+            // Handle new records
+        }
+
+        // Or get string value
+        $operationString = $operation->value; // 'create', 'update', or 'delete'
     }
 
     // Identity events
@@ -191,7 +293,11 @@ public function handle(JetstreamEvent $event): void
 
 ### Collection Filtering (with Wildcards!)
 
-Filter events by AT Protocol collection:
+Filter events by AT Protocol collection.
+
+**Important**:
+- **Jetstream mode**: Exact collection names are sent as URL parameters for server-side filtering. Wildcards work for client-side filtering only.
+- **Firehose mode**: All filtering is client-side. Wildcards work normally.
 
 ```php
 // Exact match - only posts
@@ -225,12 +331,102 @@ public function collections(): ?array
 
 ### Common Collection Patterns
 
-| Pattern | Matches |
-|---------|---------|
-| `app.bsky.feed.*` | Posts, likes, reposts, etc. |
-| `app.bsky.graph.*` | Follows, blocks, mutes |
-| `app.bsky.actor.*` | Profile updates |
-| `app.bsky.*` | All Bluesky collections |
+| Pattern            | Matches                     |
+|--------------------|-----------------------------|
+| `app.bsky.feed.*`  | Posts, likes, reposts, etc. |
+| `app.bsky.graph.*` | Follows, blocks, mutes      |
+| `app.bsky.actor.*` | Profile updates             |
+| `app.bsky.*`       | All Bluesky collections     |
+
+### Operation Filtering
+
+Filter events by operation type (only applies to `commit` events):
+
+```php
+use SocialDept\Signal\Enums\SignalCommitOperation;
+
+// Only handle creates (using enum)
+public function operations(): ?array
+{
+    return [SignalCommitOperation::Create];
+}
+
+// Only handle creates and updates (using enums)
+public function operations(): ?array
+{
+    return [
+        SignalCommitOperation::Create,
+        SignalCommitOperation::Update,
+    ];
+}
+
+// Only handle deletes (using string)
+public function operations(): ?array
+{
+    return ['delete'];
+}
+
+// No filter - all operations (default)
+public function operations(): ?array
+{
+    return null;
+}
+```
+
+**Available operations:**
+
+| Enum                            | String     | Description               |
+|---------------------------------|------------|---------------------------|
+| `SignalCommitOperation::Create` | `'create'` | New records created       |
+| `SignalCommitOperation::Update` | `'update'` | Existing records modified |
+| `SignalCommitOperation::Delete` | `'delete'` | Records removed           |
+
+**Example use cases:**
+```php
+use SocialDept\Signal\Enums\SignalCommitOperation;
+
+// Signal that only handles new posts (not edits)
+class NewPostSignal extends Signal
+{
+    public function collections(): ?array
+    {
+        return ['app.bsky.feed.post'];
+    }
+
+    public function operations(): ?array
+    {
+        return [SignalCommitOperation::Create];
+    }
+}
+
+// Signal that only handles content updates
+class ContentUpdateSignal extends Signal
+{
+    public function collections(): ?array
+    {
+        return ['app.bsky.feed.post'];
+    }
+
+    public function operations(): ?array
+    {
+        return [SignalCommitOperation::Update];
+    }
+}
+
+// Signal that handles deletions for cleanup
+class CleanupSignal extends Signal
+{
+    public function collections(): ?array
+    {
+        return ['app.bsky.feed.*'];
+    }
+
+    public function operations(): ?array
+    {
+        return [SignalCommitOperation::Delete];
+    }
+}
+```
 
 ### DID Filtering
 
@@ -251,7 +447,7 @@ public function dids(): ?array
 Add complex filtering logic:
 
 ```php
-public function shouldHandle(JetstreamEvent $event): bool
+public function shouldHandle(SignalEvent $event): bool
 {
     // Only handle posts with images
     if ($event->isCommit() && $event->commit->collection === 'app.bsky.feed.post') {
@@ -295,14 +491,14 @@ class HeavyProcessingSignal extends Signal
         return 'redis';
     }
 
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         // This runs in a queue job
         $this->performExpensiveOperation($event);
     }
 
     // Handle failures
-    public function failed(JetstreamEvent $event, \Throwable $exception): void
+    public function failed(SignalEvent $event, \Throwable $exception): void
     {
         Log::error('Signal failed', [
             'event' => $event->toArray(),
@@ -318,15 +514,37 @@ class HeavyProcessingSignal extends Signal
 
 Configuration is stored in `config/signal.php`:
 
-### Jetstream URL
+### Consumer Mode
+
+Choose between Jetstream (JSON) or Firehose (CBOR) mode:
+
+```php
+'mode' => env('SIGNAL_MODE', 'jetstream'),
+```
+
+Options:
+- `jetstream` - JSON events, server-side filtering (default)
+- `firehose` - CBOR events, client-side filtering (required for custom collections)
+
+### Jetstream Configuration
 
 ```php
 'websocket_url' => env('SIGNAL_JETSTREAM_URL', 'wss://jetstream2.us-east.bsky.network'),
 ```
 
 Available endpoints:
-- **US East**: `wss://jetstream2.us-east.bsky.network`
+- **US East**: `wss://jetstream2.us-east.bsky.network` (default)
 - **US West**: `wss://jetstream1.us-west.bsky.network`
+
+### Firehose Configuration
+
+```php
+'firehose' => [
+    'host' => env('SIGNAL_FIREHOSE_HOST', 'bsky.network'),
+],
+```
+
+The raw firehose endpoint is: `wss://{host}/xrpc/com.atproto.sync.subscribeRepos`
 
 ### Cursor Storage
 
@@ -336,21 +554,27 @@ Choose how to store cursor positions:
 'cursor_storage' => env('SIGNAL_CURSOR_STORAGE', 'database'),
 ```
 
-| Driver | Best For | Configuration |
-|--------|----------|---------------|
-| `database` | Production, multi-server | Default connection |
-| `redis` | High performance, distributed | Redis connection |
-| `file` | Development, single server | Storage path |
+| Driver     | Best For                      | Configuration      |
+|------------|-------------------------------|--------------------|
+| `database` | Production, multi-server      | Default connection |
+| `redis`    | High performance, distributed | Redis connection   |
+| `file`     | Development, single server    | Storage path       |
 
 ### Environment Variables
 
 Add to your `.env`:
 
 ```env
-# Required
+# Consumer Mode
+SIGNAL_MODE=jetstream  # or 'firehose' for custom collections
+
+# Jetstream Configuration
 SIGNAL_JETSTREAM_URL=wss://jetstream2.us-east.bsky.network
 
-# Optional
+# Firehose Configuration (only needed if using firehose mode)
+SIGNAL_FIREHOSE_HOST=bsky.network
+
+# Optional Configuration
 SIGNAL_CURSOR_STORAGE=database
 SIGNAL_QUEUE_CONNECTION=redis
 SIGNAL_QUEUE=signal
@@ -391,16 +615,24 @@ php artisan signal:install
 ```
 
 ### `signal:consume`
-Start consuming events from Jetstream
+Start consuming events from AT Protocol
 
 ```bash
+# Use default mode from config
 php artisan signal:consume
+
+# Override mode
+php artisan signal:consume --mode=jetstream
+php artisan signal:consume --mode=firehose
 
 # Start from specific cursor
 php artisan signal:consume --cursor=123456789
 
 # Start fresh (ignore stored cursor)
 php artisan signal:consume --fresh
+
+# Combine options
+php artisan signal:consume --mode=firehose --fresh
 ```
 
 ### `signal:list`
@@ -437,7 +669,7 @@ Signal includes a comprehensive test suite. Test your Signals:
 
 ```php
 use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 
 class NewPostSignalTest extends TestCase
 {
@@ -446,7 +678,7 @@ class NewPostSignalTest extends TestCase
     {
         $signal = new NewPostSignal();
 
-        $event = new JetstreamEvent(
+        $event = new SignalEvent(
             did: 'did:plc:test',
             timeUs: time() * 1000000,
             kind: 'commit',
@@ -477,19 +709,10 @@ php artisan signal:test NewPostSignal
 
 ---
 
-## Documentation
-
-For detailed documentation, see:
-
-- **[INSTALLATION.md](./INSTALLATION.md)** - Complete installation guide with troubleshooting
-- **[PACKAGE_SUMMARY.md](./PACKAGE_SUMMARY.md)** - Quick reference for package components
-- **[WILDCARD_EXAMPLES.md](./WILDCARD_EXAMPLES.md)** - Comprehensive wildcard pattern guide
-- **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - Full architecture and implementation details
-
-### External Resources
+## External Resources
 
 - [AT Protocol Documentation](https://atproto.com/)
-- [Jetstream Documentation](https://docs.bsky.app/docs/advanced-guides/jetstream)
+- [Firehose Documentation](https://docs.bsky.app/docs/advanced-guides/firehose)
 - [Bluesky Lexicon](https://atproto.com/lexicons)
 
 ---
@@ -511,7 +734,7 @@ class FeedMonitorSignal extends Signal
         return ['app.bsky.feed.*'];
     }
 
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         // Handles posts, likes, reposts, etc.
         Log::info('Feed activity', [
@@ -538,7 +761,7 @@ class NewFollowSignal extends Signal
         return ['app.bsky.graph.follow'];
     }
 
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         if ($event->commit->isCreate()) {
             $record = $event->getRecord();
@@ -573,7 +796,7 @@ class ModerationSignal extends Signal
         return true;
     }
 
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         $record = $event->getRecord();
 
@@ -600,18 +823,12 @@ The MIT License (MIT). Please see [LICENSE](LICENSE) for more information.
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](contributing.md) for details.
-
----
-
 ## Support
 
 For issues, questions, or feature requests:
-- Open an issue on GitHub
-- Check the [documentation files](#documentation)
-- Review the [implementation plan](./IMPLEMENTATION_PLAN.md)
+- Read the [README.md](./README.md) before opening issues
+- Search through existing issues
+- Open new issue
 
 ---
 

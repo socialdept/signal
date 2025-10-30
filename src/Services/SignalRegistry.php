@@ -4,7 +4,6 @@ namespace SocialDept\Signal\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
-use ReflectionClass;
 use SocialDept\Signal\Signals\Signal;
 
 class SignalRegistry
@@ -21,9 +20,9 @@ class SignalRegistry
      */
     public function register(string $signalClass): void
     {
-        if (!is_subclass_of($signalClass, Signal::class)) {
+        if (! is_subclass_of($signalClass, Signal::class)) {
             throw new \InvalidArgumentException(
-                "Signal class must extend " . Signal::class
+                'Signal class must extend '.Signal::class
             );
         }
 
@@ -35,7 +34,7 @@ class SignalRegistry
      */
     public function all(): Collection
     {
-        return $this->signals->map(fn($class) => app($class));
+        return $this->signals->map(fn ($class) => app($class));
     }
 
     /**
@@ -43,21 +42,21 @@ class SignalRegistry
      */
     public function discover(): void
     {
-        if (!config('signal.auto_discovery.enabled', true)) {
+        if (! config('signal.auto_discovery.enabled', true)) {
             return;
         }
 
         $path = config('signal.auto_discovery.path', app_path('Signals'));
         $namespace = config('signal.auto_discovery.namespace', 'App\\Signals');
 
-        if (!File::exists($path)) {
+        if (! File::exists($path)) {
             return;
         }
 
         $files = File::allFiles($path);
 
         foreach ($files as $file) {
-            $class = $namespace . '\\' . $file->getFilenameWithoutExtension();
+            $class = $namespace.'\\'.$file->getFilenameWithoutExtension();
 
             if (class_exists($class) && is_subclass_of($class, Signal::class)) {
                 $this->register($class);
@@ -72,26 +71,36 @@ class SignalRegistry
     {
         return $this->all()->filter(function (Signal $signal) use ($event) {
             // Check event type
-            if (!in_array($event->kind, $signal->eventTypes())) {
+            $eventTypes = $this->normalizeValues($signal->eventTypes());
+            if (! in_array($event->kind, $eventTypes)) {
                 return false;
             }
 
             // Check collections filter (with wildcard support)
             if ($signal->collections() !== null && $event->isCommit()) {
-                if (!$this->matchesCollection($event->getCollection(), $signal->collections())) {
+                if (! $this->matchesCollection($event->getCollection(), $signal->collections())) {
+                    return false;
+                }
+            }
+
+            // Check operations filter (only for commit events)
+            if ($signal->operations() !== null && $event->isCommit()) {
+                $operation = $event->getOperation();
+                $operations = $this->normalizeValues($signal->operations());
+                if ($operation && ! in_array($operation->value, $operations)) {
                     return false;
                 }
             }
 
             // Check DIDs filter
             if ($signal->dids() !== null) {
-                if (!in_array($event->did, $signal->dids())) {
+                if (! in_array($event->did, $signal->dids())) {
                     return false;
                 }
             }
 
             // Check custom shouldHandle logic
-            if (!$signal->shouldHandle($event)) {
+            if (! $signal->shouldHandle($event)) {
                 return false;
             }
 
@@ -102,9 +111,8 @@ class SignalRegistry
     /**
      * Check if a collection matches any of the patterns (supports wildcards).
      *
-     * @param string|null $collection The actual collection from the event
-     * @param array $patterns Array of collection patterns (may include wildcards like 'app.bsky.feed.*')
-     * @return bool
+     * @param  string|null  $collection  The actual collection from the event
+     * @param  array  $patterns  Array of collection patterns (may include wildcards like 'app.bsky.feed.*')
      */
     protected function matchesCollection(?string $collection, array $patterns): bool
     {
@@ -126,12 +134,31 @@ class SignalRegistry
                 // Replace escaped \* with .* for regex wildcard
                 $regex = str_replace('\*', '.*', $regex);
 
-                if (preg_match('/^' . $regex . '$/', $collection)) {
+                if (preg_match('/^'.$regex.'$/', $collection)) {
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+    /**
+     * Normalize array values to strings (handle backed enums).
+     *
+     * @param  array  $values  Array of strings or backed enums
+     * @return array Array of string values
+     */
+    protected function normalizeValues(array $values): array
+    {
+        return array_map(function ($value) {
+            // If it's a backed enum, get its value
+            if ($value instanceof \BackedEnum) {
+                return $value->value;
+            }
+
+            // Otherwise, return as-is (should be a string)
+            return $value;
+        }, $values);
     }
 }

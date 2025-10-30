@@ -4,7 +4,7 @@ namespace SocialDept\Signal\Tests\Unit;
 
 use Orchestra\Testbench\TestCase;
 use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Services\SignalRegistry;
 use SocialDept\Signal\Signals\Signal;
 
@@ -15,7 +15,7 @@ class SignalRegistryTest extends TestCase
     {
         $registry = new SignalRegistry();
 
-        $event = new JetstreamEvent(
+        $event = new SignalEvent(
             did: 'did:plc:test',
             timeUs: time() * 1000000,
             kind: 'commit',

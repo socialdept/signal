@@ -2,7 +2,7 @@
 
 namespace SocialDept\Signal\Events;
 
-class JetstreamEvent
+class SignalEvent
 {
     public function __construct(
         public string $did,
@@ -38,7 +38,7 @@ class JetstreamEvent
         return $this->commit?->record;
     }
 
-    public function getOperation(): ?string
+    public function getOperation(): ?\SocialDept\Signal\Enums\SignalCommitOperation
     {
         return $this->commit?->operation;
     }

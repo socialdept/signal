@@ -3,7 +3,7 @@
 namespace SocialDept\Signal\Commands;
 
 use Illuminate\Console\Command;
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Events\CommitEvent;
 
 class TestSignalCommand extends Command
@@ -56,11 +56,11 @@ class TestSignalCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function createSampleEvent(string $type): JetstreamEvent
+    protected function createSampleEvent(string $type): SignalEvent
     {
         switch ($type) {
             case 'commit':
-                return new JetstreamEvent(
+                return new SignalEvent(
                     did: 'did:plc:sample123456789',
                     timeUs: time() * 1000000,
                     kind: 'commit',

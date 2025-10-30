@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Signals\Signal;
 
 class {{ class }} extends Signal
@@ -29,9 +29,9 @@ class {{ class }} extends Signal
     }
 
     /**
-     * Handle the Jetstream event.
+     * Handle the SignalEvent.
      */
-    public function handle(JetstreamEvent $event): void
+    public function handle(SignalEvent $event): void
     {
         // Handle the event here
 
@@ -48,7 +48,7 @@ class {{ class }} extends Signal
     /**
      * Determine if this signal should handle the event.
      */
-    public function shouldHandle(JetstreamEvent $event): bool
+    public function shouldHandle(SignalEvent $event): bool
     {
         return true;
     }

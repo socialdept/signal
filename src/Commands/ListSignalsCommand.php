@@ -23,21 +23,36 @@ class ListSignalsCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Found {$signals->count()} signal(s):");
+        $this->components->info("Found {$signals->count()} " . str('signal')->plural($signals->count()));
         $this->newLine();
 
-        $this->table(
-            ['Signal', 'Event Types', 'Collections', 'DIDs', 'Queued'],
-            $signals->map(function ($signal) {
-                return [
-                    get_class($signal),
-                    implode(', ', $signal->eventTypes()),
-                    $signal->collections() ? implode(', ', $signal->collections()) : 'All',
-                    $signal->dids() ? implode(', ', $signal->dids()) : 'All',
-                    $signal->shouldQueue() ? 'Yes' : 'No',
-                ];
-            })
-        );
+        foreach ($signals as $signal) {
+            $className = class_basename($signal);
+            $fullClassName = get_class($signal);
+
+            $this->line("  <fg=green>•</> <options=bold>{$className}</>");
+            $this->line("    <fg=gray>Class:</> {$fullClassName}");
+
+            $eventTypes = collect($signal->eventTypes())->map(fn($type) => "<fg=cyan>{$type}</>")->join(', ');
+            $this->line("    <fg=gray>Events:</> {$eventTypes}");
+
+            $collections = $signal->collections()
+                ? collect($signal->collections())->map(fn($col) => "<fg=yellow>{$col}</>")->join(', ')
+                : '<fg=gray>All collections</>';
+            $this->line("    <fg=gray>Collections:</> {$collections}");
+
+            if ($signal->dids()) {
+                $dids = collect($signal->dids())->map(fn($did) => "<fg=magenta>{$did}</>")->join(', ');
+                $this->line("    <fg=gray>DIDs:</> {$dids}");
+            }
+
+            if ($signal->shouldQueue()) {
+                $queue = $signal->queue() ?? 'default';
+                $this->line("    <fg=gray>Queue:</> <fg=blue>{$queue}</>");
+            }
+
+            $this->newLine();
+        }
 
         return self::SUCCESS;
     }

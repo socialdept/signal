@@ -4,7 +4,7 @@ namespace SocialDept\Signal\Tests\Unit;
 
 use Orchestra\Testbench\TestCase;
 use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\JetstreamEvent;
+use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Signals\Signal;
 
 class SignalTest extends TestCase
@@ -18,7 +18,7 @@ class SignalTest extends TestCase
                 return ['commit'];
             }
 
-            public function handle(JetstreamEvent $event): void
+            public function handle(SignalEvent $event): void
             {
                 //
             }
@@ -42,13 +42,13 @@ class SignalTest extends TestCase
                 return ['app.bsky.feed.post'];
             }
 
-            public function handle(JetstreamEvent $event): void
+            public function handle(SignalEvent $event): void
             {
                 //
             }
         };
 
-        $event = new JetstreamEvent(
+        $event = new SignalEvent(
             did: 'did:plc:test',
             timeUs: time() * 1000000,
             kind: 'commit',
@@ -77,14 +77,14 @@ class SignalTest extends TestCase
                 return ['app.bsky.feed.*'];
             }
 
-            public function handle(JetstreamEvent $event): void
+            public function handle(SignalEvent $event): void
             {
                 //
             }
         };
 
         // Test that it matches app.bsky.feed.post
-        $postEvent = new JetstreamEvent(
+        $postEvent = new SignalEvent(
             did: 'did:plc:test',
             timeUs: time() * 1000000,
             kind: 'commit',
@@ -99,7 +99,7 @@ class SignalTest extends TestCase
         $this->assertTrue($signal->shouldHandle($postEvent));
 
         // Test that it matches app.bsky.feed.like
-        $likeEvent = new JetstreamEvent(
+        $likeEvent = new SignalEvent(
             did: 'did:plc:test',
             timeUs: time() * 1000000,
             kind: 'commit',
@@ -114,7 +114,7 @@ class SignalTest extends TestCase
         $this->assertTrue($signal->shouldHandle($likeEvent));
 
         // Test that it does NOT match app.bsky.graph.follow
-        $followEvent = new JetstreamEvent(
+        $followEvent = new SignalEvent(
             did: 'did:plc:test',
             timeUs: time() * 1000000,
             kind: 'commit',

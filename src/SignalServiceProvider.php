@@ -10,7 +10,9 @@ use SocialDept\Signal\Commands\MakeSignalCommand;
 use SocialDept\Signal\Commands\TestSignalCommand;
 use SocialDept\Signal\Contracts\CursorStore;
 use SocialDept\Signal\Services\EventDispatcher;
+use SocialDept\Signal\Services\FirehoseConsumer;
 use SocialDept\Signal\Services\JetstreamConsumer;
+use SocialDept\Signal\Services\SignalManager;
 use SocialDept\Signal\Services\SignalRegistry;
 use SocialDept\Signal\Storage\DatabaseCursorStore;
 use SocialDept\Signal\Storage\FileCursorStore;
@@ -20,20 +22,20 @@ class SignalServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/signal.php', 'signal');
+        $this->mergeConfigFrom(__DIR__.'/../config/signal.php', 'signal');
 
         // Register cursor store
         $this->app->singleton(CursorStore::class, function ($app) {
             return match (config('signal.cursor_storage')) {
-                'redis' => new RedisCursorStore(),
-                'file' => new FileCursorStore(),
-                default => new DatabaseCursorStore(),
+                'redis' => new RedisCursorStore,
+                'file' => new FileCursorStore,
+                default => new DatabaseCursorStore,
             };
         });
 
         // Register signal registry
         $this->app->singleton(SignalRegistry::class, function ($app) {
-            $registry = new SignalRegistry();
+            $registry = new SignalRegistry;
 
             // Register configured signals
             foreach (config('signal.signals', []) as $signal) {
@@ -56,6 +58,23 @@ class SignalServiceProvider extends ServiceProvider
                 $app->make(EventDispatcher::class),
             );
         });
+
+        // Register Firehose consumer
+        $this->app->singleton(FirehoseConsumer::class, function ($app) {
+            return new FirehoseConsumer(
+                $app->make(CursorStore::class),
+                $app->make(SignalRegistry::class),
+                $app->make(EventDispatcher::class),
+            );
+        });
+
+        // Register Signal manager
+        $this->app->singleton(SignalManager::class, function ($app) {
+            return new SignalManager(
+                $app->make(FirehoseConsumer::class),
+                $app->make(JetstreamConsumer::class),
+            );
+        });
     }
 
     public function boot(): void
@@ -63,12 +82,12 @@ class SignalServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Publish config
             $this->publishes([
-                __DIR__ . '/../config/signal.php' => config_path('signal.php'),
+                __DIR__.'/../config/signal.php' => config_path('signal.php'),
             ], 'signal-config');
 
             // Publish migrations
             $this->publishes([
-                __DIR__ . '/../database/migrations' => database_path('migrations'),
+                __DIR__.'/../database/migrations' => database_path('migrations'),
             ], 'signal-migrations');
 
             // Register commands
@@ -82,6 +101,6 @@ class SignalServiceProvider extends ServiceProvider
         }
 
         // Load migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 }

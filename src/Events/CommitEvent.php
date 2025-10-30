@@ -2,9 +2,10 @@
 
 namespace SocialDept\Signal\Events;
 
+use SocialDept\Signal\Contracts\EventContract;
 use SocialDept\Signal\Enums\SignalCommitOperation;
 
-class CommitEvent
+class CommitEvent implements EventContract
 {
     public SignalCommitOperation $operation;
 

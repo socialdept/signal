@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signal\Support;
+namespace SocialDept\Signals\Support;
 
 use Ratchet\Client\Connector;
 use Ratchet\Client\WebSocket;

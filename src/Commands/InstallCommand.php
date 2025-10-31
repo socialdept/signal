@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signal\Commands;
+namespace SocialDept\Signals\Commands;
 
 use Illuminate\Console\Command;
 

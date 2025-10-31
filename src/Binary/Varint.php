@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signal\Binary;
+namespace SocialDept\Signals\Binary;
 
 use RuntimeException;
 

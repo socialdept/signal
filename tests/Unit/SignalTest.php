@@ -1,11 +1,11 @@
 <?php
 
-namespace SocialDept\Signal\Tests\Unit;
+namespace SocialDept\Signals\Tests\Unit;
 
 use Orchestra\Testbench\TestCase;
-use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Events\CommitEvent;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class SignalTest extends TestCase
 {
@@ -84,7 +84,7 @@ class SignalTest extends TestCase
         };
 
         // Create registry and register the signal
-        $registry = new \SocialDept\Signal\Services\SignalRegistry();
+        $registry = new \SocialDept\Signals\Services\SignalRegistry();
         $registry->register($signalClass::class);
 
         // Test that it matches app.bsky.feed.post

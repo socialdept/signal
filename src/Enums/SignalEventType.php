@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signal\Enums;
+namespace SocialDept\Signals\Enums;
 
 enum SignalEventType: string
 {

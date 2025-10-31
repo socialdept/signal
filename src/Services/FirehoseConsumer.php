@@ -1,19 +1,19 @@
 <?php
 
-namespace SocialDept\Signal\Services;
+namespace SocialDept\Signals\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
-use SocialDept\Signal\Contracts\CursorStore;
-use SocialDept\Signal\Core\CAR;
-use SocialDept\Signal\Core\CBOR;
-use SocialDept\Signal\Core\CID;
-use SocialDept\Signal\Events\AccountEvent;
-use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\IdentityEvent;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Exceptions\ConnectionException;
-use SocialDept\Signal\Support\WebSocketConnection;
+use SocialDept\Signals\Contracts\CursorStore;
+use SocialDept\Signals\Core\CAR;
+use SocialDept\Signals\Core\CBOR;
+use SocialDept\Signals\Core\CID;
+use SocialDept\Signals\Events\AccountEvent;
+use SocialDept\Signals\Events\CommitEvent;
+use SocialDept\Signals\Events\IdentityEvent;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Exceptions\ConnectionException;
+use SocialDept\Signals\Support\WebSocketConnection;
 
 class FirehoseConsumer
 {

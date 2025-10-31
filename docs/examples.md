@@ -12,9 +12,9 @@ Track engagement metrics across Bluesky.
 namespace App\Signals;
 
 use App\Models\EngagementMetric;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 use Illuminate\Support\Facades\DB;
 
 class EngagementTrackerSignal extends Signal
@@ -78,9 +78,9 @@ namespace App\Signals;
 
 use App\Models\FlaggedPost;
 use App\Services\ModerationService;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class ModerationSignal extends Signal
 {
@@ -158,9 +158,9 @@ namespace App\Signals;
 
 use App\Models\Activity;
 use App\Models\User;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class ActivityFeedSignal extends Signal
 {
@@ -243,9 +243,9 @@ namespace App\Signals;
 
 use App\Models\User;
 use App\Notifications\MentionedInPost;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class MentionNotificationSignal extends Signal
 {
@@ -314,9 +314,9 @@ namespace App\Signals;
 use App\Models\Follow;
 use App\Models\User;
 use App\Notifications\NewFollower;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class FollowTrackerSignal extends Signal
 {
@@ -393,9 +393,9 @@ namespace App\Signals;
 
 use App\Models\Post;
 use Laravel\Scout\Searchable;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class SearchIndexerSignal extends Signal
 {
@@ -477,9 +477,9 @@ namespace App\Signals;
 
 use App\Models\TrendingTopic;
 use Illuminate\Support\Facades\Cache;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class TrendDetectionSignal extends Signal
 {
@@ -553,9 +553,9 @@ Index custom collections for your AppView.
 namespace App\Signals;
 
 use App\Models\Publication;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class PublicationIndexerSignal extends Signal
 {
@@ -633,8 +633,8 @@ namespace App\Signals;
 
 use App\Services\ExternalAPIService;
 use Illuminate\Support\Facades\RateLimiter;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class APIIntegrationSignal extends Signal
 {
@@ -695,9 +695,9 @@ Track engagement across multiple collection types.
 namespace App\Signals;
 
 use App\Models\UserMetrics;
-use SocialDept\Signal\Enums\SignalCommitOperation;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class UserMetricsSignal extends Signal
 {

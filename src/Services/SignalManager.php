@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signal\Services;
+namespace SocialDept\Signals\Services;
 
 use InvalidArgumentException;
 

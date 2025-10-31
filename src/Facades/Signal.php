@@ -1,16 +1,16 @@
 <?php
 
-namespace SocialDept\Signal\Facades;
+namespace SocialDept\Signals\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use SocialDept\Signal\Services\SignalManager;
+use SocialDept\Signals\Services\SignalManager;
 
 /**
  * @method static void start(?int $cursor = null)
  * @method static void stop()
  * @method static string getMode()
  *
- * @see \SocialDept\Signal\Services\SignalManager
+ * @see \SocialDept\Signals\Services\SignalManager
  */
 class Signal extends Facade
 {

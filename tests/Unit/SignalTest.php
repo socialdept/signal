@@ -66,7 +66,7 @@ class SignalTest extends TestCase
     /** @test */
     public function it_can_filter_by_wildcard_collection()
     {
-        $signal = new class extends Signal {
+        $signalClass = new class extends Signal {
             public function eventTypes(): array
             {
                 return ['commit'];
@@ -83,6 +83,10 @@ class SignalTest extends TestCase
             }
         };
 
+        // Create registry and register the signal
+        $registry = new \SocialDept\Signal\Services\SignalRegistry;
+        $registry->register($signalClass::class);
+
         // Test that it matches app.bsky.feed.post
         $postEvent = new SignalEvent(
             did: 'did:plc:test',
@@ -96,7 +100,8 @@ class SignalTest extends TestCase
             ),
         );
 
-        $this->assertTrue($signal->shouldHandle($postEvent));
+        $matchingSignals = $registry->getMatchingSignals($postEvent);
+        $this->assertCount(1, $matchingSignals);
 
         // Test that it matches app.bsky.feed.like
         $likeEvent = new SignalEvent(
@@ -111,7 +116,8 @@ class SignalTest extends TestCase
             ),
         );
 
-        $this->assertTrue($signal->shouldHandle($likeEvent));
+        $matchingSignals = $registry->getMatchingSignals($likeEvent);
+        $this->assertCount(1, $matchingSignals);
 
         // Test that it does NOT match app.bsky.graph.follow
         $followEvent = new SignalEvent(
@@ -126,6 +132,7 @@ class SignalTest extends TestCase
             ),
         );
 
-        $this->assertFalse($signal->shouldHandle($followEvent));
+        $matchingSignals = $registry->getMatchingSignals($followEvent);
+        $this->assertCount(0, $matchingSignals);
     }
 }

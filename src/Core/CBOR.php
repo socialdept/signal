@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signal\Core;
+namespace SocialDept\Signals\Core;
 
-use SocialDept\Signal\CBOR\Decoder;
+use SocialDept\Signals\CBOR\Decoder;
 
 /**
  * CBOR facade for simple decoding operations.

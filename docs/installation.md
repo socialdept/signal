@@ -16,7 +16,7 @@ Before installing Signal, ensure your environment meets these requirements:
 Install Signal via Composer:
 
 ```bash
-composer require socialdept/signal
+composer require socialdept/atp-signals
 ```
 
 ## Quick Setup
@@ -176,7 +176,7 @@ To remove Signal from your application:
 
 ```bash
 # Remove the package
-composer remove socialdept/signal
+composer remove socialdept/atp-signals
 
 # Optionally, rollback migrations
 php artisan migrate:rollback

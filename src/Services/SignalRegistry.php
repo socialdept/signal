@@ -1,11 +1,11 @@
 <?php
 
-namespace SocialDept\Signal\Services;
+namespace SocialDept\Signals\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Signals\Signal;
 
 class SignalRegistry
 {

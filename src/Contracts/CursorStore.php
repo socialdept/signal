@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signal\Contracts;
+namespace SocialDept\Signals\Contracts;
 
 interface CursorStore
 {

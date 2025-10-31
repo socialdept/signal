@@ -1,11 +1,11 @@
 <?php
 
-namespace SocialDept\Signal\Commands;
+namespace SocialDept\Signals\Commands;
 
 use Illuminate\Console\Command;
 use InvalidArgumentException;
-use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\SignalEvent;
+use SocialDept\Signals\Events\CommitEvent;
+use SocialDept\Signals\Events\SignalEvent;
 
 class TestSignalCommand extends Command
 {

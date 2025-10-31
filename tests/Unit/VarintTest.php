@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signal\Tests\Unit;
+namespace SocialDept\Signals\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use SocialDept\Signal\Binary\Varint;
+use SocialDept\Signals\Binary\Varint;
 
 class VarintTest extends TestCase
 {

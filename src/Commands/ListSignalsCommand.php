@@ -1,10 +1,10 @@
 <?php
 
-namespace SocialDept\Signal\Commands;
+namespace SocialDept\Signals\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use SocialDept\Signal\Services\SignalRegistry;
+use SocialDept\Signals\Services\SignalRegistry;
 
 class ListSignalsCommand extends Command
 {

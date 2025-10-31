@@ -1,10 +1,10 @@
 <?php
 
-namespace SocialDept\Signal\Storage;
+namespace SocialDept\Signals\Storage;
 
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
-use SocialDept\Signal\Contracts\CursorStore;
+use SocialDept\Signals\Contracts\CursorStore;
 
 class DatabaseCursorStore implements CursorStore
 {

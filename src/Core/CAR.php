@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signal\Core;
+namespace SocialDept\Signals\Core;
 
-use SocialDept\Signal\CAR\BlockReader;
+use SocialDept\Signals\CAR\BlockReader;
 
 /**
  * CAR (Content Addressable aRchive) facade.

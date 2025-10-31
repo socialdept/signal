@@ -1,11 +1,11 @@
 <?php
 
-namespace SocialDept\Signal\Tests\Unit;
+namespace SocialDept\Signals\Tests\Unit;
 
 use Orchestra\Testbench\TestCase;
-use SocialDept\Signal\Events\CommitEvent;
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Services\SignalRegistry;
+use SocialDept\Signals\Events\CommitEvent;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Services\SignalRegistry;
 
 class SignalRegistryTest extends TestCase
 {

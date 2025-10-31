@@ -1,5 +1,5 @@
 {
-    "name": "socialdept/signal",
+    "name": "socialdept/atp-signals",
     "description": "Build Reactive Signals for Bluesky's AT Protocol Firehose in Laravel",
     "type": "library",
     "license": "MIT",
@@ -19,21 +19,21 @@
     },
     "autoload": {
         "psr-4": {
-            "SocialDept\\Signal\\": "src/"
+            "SocialDept\\Signals\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "SocialDept\\Signal\\Tests\\": "tests/"
+            "SocialDept\\Signals\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "SocialDept\\Signal\\SignalServiceProvider"
+                "SocialDept\\Signals\\SignalServiceProvider"
             ],
             "aliases": {
-                "Signal": "SocialDept\\Signal\\Facades\\Signal"
+                "Signal": "SocialDept\\Signals\\Facades\\Signal"
             }
         }
     }

@@ -1,4 +1,4 @@
-[![Signal Header](./header.png)](https://github.com/socialdept/signal)
+[![Signal Header](./header.png)](https://github.com/socialdept/atp-signals)
 
 <h3 align="center">
     Consume real-time AT Protocol events in your Laravel application.
@@ -6,10 +6,10 @@
 
 <p align="center">
     <br>
-    <a href="https://packagist.org/packages/socialdept/signal" title="Latest Version on Packagist"><img src="https://img.shields.io/packagist/v/socialdept/signal.svg?style=flat-square"></a>
-    <a href="https://packagist.org/packages/socialdept/signal" title="Total Downloads"><img src="https://img.shields.io/packagist/dt/socialdept/signal.svg?style=flat-square"></a>
-    <a href="https://github.com/socialdept/signal/actions/workflows/tests.yml" title="GitHub Tests Action Status"><img src="https://img.shields.io/github/actions/workflow/status/socialdept/signal/tests.yml?branch=main&label=tests&style=flat-square"></a>
-    <a href="LICENSE" title="Software License"><img src="https://img.shields.io/github/license/socialdept/signal?style=flat-square"></a>
+    <a href="https://packagist.org/packages/socialdept/atp-signals" title="Latest Version on Packagist"><img src="https://img.shields.io/packagist/v/socialdept/atp-signals.svg?style=flat-square"></a>
+    <a href="https://packagist.org/packages/socialdept/atp-signals" title="Total Downloads"><img src="https://img.shields.io/packagist/dt/socialdept/atp-signals.svg?style=flat-square"></a>
+    <a href="https://github.com/socialdept/atp-signals/actions/workflows/tests.yml" title="GitHub Tests Action Status"><img src="https://img.shields.io/github/actions/workflow/status/socialdept/atp-signals/tests.yml?branch=main&label=tests&style=flat-square"></a>
+    <a href="LICENSE" title="Software License"><img src="https://img.shields.io/github/license/socialdept/atp-signals?style=flat-square"></a>
 </p>
 
 ---
@@ -33,8 +33,8 @@ Think of it as Laravel's event listeners, but for the decentralized social web.
 ## Quick Example
 
 ```php
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class NewPostSignal extends Signal
 {
@@ -65,7 +65,7 @@ Run `php artisan signal:consume` and start responding to every post on Bluesky i
 ## Installation
 
 ```bash
-composer require socialdept/signal
+composer require socialdept/atp-signals
 php artisan signal:install
 ```
 
@@ -232,14 +232,14 @@ php artisan signal:test YourSignal
 
 ## Support & Contributing
 
-Found a bug or have a feature request? [Open an issue](https://github.com/socialdept/signal/issues).
+Found a bug or have a feature request? [Open an issue](https://github.com/socialdept/atp-signals/issues).
 
 Want to contribute? We'd love your help! Check out the [contribution guidelines](CONTRIBUTING.md).
 
 ## Credits
 
 - [Miguel Batres](https://batres.co) - founder & lead maintainer
-- [All contributors](https://github.com/socialdept/signal/graphs/contributors)
+- [All contributors](https://github.com/socialdept/atp-signals/graphs/contributors)
 
 ## License
 

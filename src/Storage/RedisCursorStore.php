@@ -1,9 +1,9 @@
 <?php
 
-namespace SocialDept\Signal\Storage;
+namespace SocialDept\Signals\Storage;
 
 use Illuminate\Support\Facades\Redis;
-use SocialDept\Signal\Contracts\CursorStore;
+use SocialDept\Signals\Contracts\CursorStore;
 
 class RedisCursorStore implements CursorStore
 {

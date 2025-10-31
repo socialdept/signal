@@ -224,7 +224,7 @@ class FirehoseConsumer
                 // Decode the CBOR block to get the record data
                 $decoded = rescue(fn () => CBOR::decode($blocks[$cidStr]));
                 if (is_array($decoded)) {
-                    $record = $decoded;
+                    $record = $this->normalizeCids($decoded);
                 }
             }
 
@@ -267,6 +267,23 @@ class FirehoseConsumer
             kind: 'commit',
             commit: $commitEvent
         );
+    }
+
+    /**
+     * Normalize CID objects to AT Protocol link format.
+     */
+    protected function normalizeCids(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if ($value instanceof CID) {
+                // Convert CID to AT Protocol link format
+                $data[$key] = ['$link' => $value->toString()];
+            } elseif (is_array($value)) {
+                $data[$key] = $this->normalizeCids($value);
+            }
+        }
+
+        return $data;
     }
 
     /**

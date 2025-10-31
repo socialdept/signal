@@ -24,4 +24,3 @@ jobs:
 
       - name: Run PHP CS Fixer
         run: php-cs-fixer fix --dry-run --diff --verbose
-        continue-on-error: true

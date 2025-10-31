@@ -4,9 +4,10 @@ namespace SocialDept\Signal\Services;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
-use Revolution\Bluesky\Core\CAR;
-use Revolution\Bluesky\Core\CBOR;
 use SocialDept\Signal\Contracts\CursorStore;
+use SocialDept\Signal\Core\CAR;
+use SocialDept\Signal\Core\CBOR;
+use SocialDept\Signal\Core\CID;
 use SocialDept\Signal\Events\AccountEvent;
 use SocialDept\Signal\Events\CommitEvent;
 use SocialDept\Signal\Events\IdentityEvent;
@@ -45,16 +46,18 @@ class FirehoseConsumer
     {
         $this->shouldStop = false;
 
-        // Get cursor from storage if not provided
+        // Get cursor from storage if not explicitly provided
+        // null = use stored cursor, 0 = start fresh (no cursor), >0 = specific cursor
         if ($cursor === null) {
             $cursor = $this->cursorStore->get();
         }
 
-        $url = $this->buildWebSocketUrl($cursor);
+        // If cursor is explicitly 0, don't send it (fresh start)
+        $url = $this->buildWebSocketUrl($cursor > 0 ? $cursor : null);
 
         Log::info('Signal: Starting Firehose consumer', [
             'url' => $url,
-            'cursor' => $cursor,
+            'cursor' => $cursor > 0 ? $cursor : 'none (fresh start)',
             'mode' => 'firehose',
         ]);
 
@@ -176,11 +179,17 @@ class FirehoseConsumer
         $time = $payload['time'];
         $timeUs = $payload['seq'] ?? 0; // Use seq as time_us equivalent
 
-        // Parse CAR blocks
+        // Parse CAR blocks (returns CID => block data map)
         $records = $payload['blocks'];
+
         $blocks = [];
         if (! empty($records)) {
-            $blocks = rescue(fn () => iterator_to_array(CAR::blockMap($records)), []);
+            $blocks = rescue(fn () => CAR::blockMap($records, $did), [], function (\Throwable $e) {
+                Log::warning('Signal: Failed to parse CAR blocks', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            });
         }
 
         // Process operations
@@ -202,19 +211,28 @@ class FirehoseConsumer
             $rkey = '';
 
             if (str_contains($path, '/')) {
-                [$collection, $rkey] = explode('/', $path);
+                [$collection, $rkey] = explode('/', $path, 2);
             }
 
-            $record = $blocks[$path] ?? [];
+            // Get record data from blocks using the op CID
+            // Convert CID to string if it's an object
+            $cidStr = $cid instanceof CID ? $cid->toString() : $cid;
+
+            // For delete operations, there won't be a record
+            $record = [];
+            if ($action !== 'delete' && isset($blocks[$cidStr])) {
+                // Decode the CBOR block to get the record data
+                $decoded = rescue(fn () => CBOR::decode($blocks[$cidStr]));
+                if (is_array($decoded)) {
+                    $record = $decoded;
+                }
+            }
 
             // Convert to SignalEvent format for compatibility
-            $event = $this->buildSignalEvent($did, $timeUs, $action, $collection, $rkey, $rev, $cid, $record);
+            $event = $this->buildSignalEvent($did, $timeUs, $action, $collection, $rkey, $rev, $cidStr, $record);
 
-            // Dispatch event with cursor update and logging
-            $this->dispatchSignalEvent($event, 'Commit', [
-                'collection' => $collection,
-                'operation' => $action,
-            ]);
+            // Dispatch event with cursor update
+            $this->dispatchSignalEvent($event);
         }
     }
 
@@ -231,14 +249,15 @@ class FirehoseConsumer
         ?string $cid,
         array $record
     ): SignalEvent {
-        $recordValue = $record['value'] ?? null;
+        // Record is already the decoded data, or empty array for deletes
+        $recordValue = ! empty($record) ? (object) $record : null;
 
         $commitEvent = new CommitEvent(
             rev: $rev,
             operation: $operation,
             collection: $collection,
             rkey: $rkey,
-            record: $recordValue ? (object) $recordValue : null,
+            record: $recordValue,
             cid: $cid
         );
 
@@ -251,22 +270,12 @@ class FirehoseConsumer
     }
 
     /**
-     * Dispatch a SignalEvent with cursor update and logging.
+     * Dispatch a SignalEvent with cursor update.
      */
-    protected function dispatchSignalEvent(SignalEvent $event, string $eventType, array $context = []): void
+    protected function dispatchSignalEvent(SignalEvent $event): void
     {
         // Update cursor
         $this->cursorStore->set($event->timeUs);
-
-        // Check if any signals match this event
-        $matchingSignals = $this->signalRegistry->getMatchingSignals($event);
-
-        if ($matchingSignals->isNotEmpty()) {
-            Log::info("Signal: {$eventType} event matched", array_merge([
-                'matched_signals' => $matchingSignals->count(),
-                'signal_names' => $matchingSignals->map(fn ($s) => class_basename($s))->join(', '),
-            ], $context));
-        }
 
         // Dispatch to matching signals
         $this->eventDispatcher->dispatch($event);
@@ -306,11 +315,8 @@ class FirehoseConsumer
             identity: $identityEvent
         );
 
-        // Dispatch event with cursor update and logging
-        $this->dispatchSignalEvent($event, 'Identity', [
-            'did' => $did,
-            'handle' => $handle,
-        ]);
+        // Dispatch event with cursor update
+        $this->dispatchSignalEvent($event);
     }
 
     /**
@@ -349,12 +355,8 @@ class FirehoseConsumer
             account: $accountEvent
         );
 
-        // Dispatch event with cursor update and logging
-        $this->dispatchSignalEvent($event, 'Account', [
-            'did' => $did,
-            'active' => $active,
-            'status' => $status,
-        ]);
+        // Dispatch event with cursor update
+        $this->dispatchSignalEvent($event);
     }
 
     /**
@@ -441,15 +443,6 @@ class FirehoseConsumer
         if (! empty($params)) {
             $url .= '?'.implode('&', $params);
         }
-
-        Log::warning('Signal: Firehose mode - NO server-side collection filtering', [
-            'note' => 'All events will be received and filtered client-side',
-            'registered_collections' => $this->signalRegistry->all()
-                ->flatMap(fn ($signal) => $signal->collections() ?? [])
-                ->unique()
-                ->values()
-                ->toArray(),
-        ]);
 
         return $url;
     }

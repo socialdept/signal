@@ -39,16 +39,19 @@ class JetstreamConsumer
     {
         $this->shouldStop = false;
 
-        // Get cursor from storage if not provided
+        // Get cursor from storage if not explicitly provided
+        // null = use stored cursor, 0 = start fresh (no cursor), >0 = specific cursor
         if ($cursor === null) {
             $cursor = $this->cursorStore->get();
         }
 
-        $url = $this->buildWebSocketUrl($cursor);
+        // If cursor is explicitly 0, don't send it (fresh start)
+        $url = $this->buildWebSocketUrl($cursor > 0 ? $cursor : null);
 
         Log::info('Signal: Starting Jetstream consumer', [
             'url' => $url,
-            'cursor' => $cursor,
+            'cursor' => $cursor > 0 ? $cursor : 'none (fresh start)',
+            'mode' => 'firehose',
         ]);
 
         $this->connect($url);
@@ -126,21 +129,6 @@ class JetstreamConsumer
 
             // Update cursor
             $this->cursorStore->set($event->timeUs);
-
-            // Check if any signals match this event
-            $matchingSignals = $this->signalRegistry->getMatchingSignals($event);
-
-            if ($matchingSignals->isNotEmpty()) {
-                $collection = $event->getCollection() ?? $event->kind;
-                $operation = $event->getOperation() ?? 'event';
-
-                Log::info('Signal: Event matched', [
-                    'collection' => $collection,
-                    'operation' => $operation,
-                    'matched_signals' => $matchingSignals->count(),
-                    'signal_names' => $matchingSignals->map(fn ($s) => class_basename($s))->join(', '),
-                ]);
-            }
 
             // Dispatch to matching signals
             $this->eventDispatcher->dispatch($event);
@@ -244,12 +232,6 @@ class JetstreamConsumer
             foreach ($collections as $collection) {
                 $params[] = 'wantedCollections='.urlencode($collection);
             }
-
-            Log::info('Signal: Collection filters applied', [
-                'collections' => $collections->toArray(),
-            ]);
-        } else {
-            Log::warning('Signal: No collection filters - will receive ALL events');
         }
 
         if (! empty($params)) {

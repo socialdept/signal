@@ -115,7 +115,7 @@ class ConsumeCommand extends Command
         if ($this->option('fresh')) {
             $this->info('Starting fresh from the beginning');
 
-            return null;
+            return 0; // Explicitly 0 means "start fresh, no cursor"
         }
 
         if ($this->option('cursor')) {
@@ -127,7 +127,7 @@ class ConsumeCommand extends Command
 
         $this->info('Resuming from stored cursor position');
 
-        return null;
+        return null; // null means "use stored cursor"
     }
 
     private function startConsumer(string $mode, ?int $cursor): int

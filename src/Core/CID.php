@@ -23,7 +23,8 @@ class CID
         public readonly int $version,
         public readonly int $codec,
         public readonly string $hash,
-    ) {}
+    ) {
+    }
 
     /**
      * Parse CID from binary data.

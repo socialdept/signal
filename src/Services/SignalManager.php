@@ -9,7 +9,8 @@ class SignalManager
     public function __construct(
         protected FirehoseConsumer $firehoseConsumer,
         protected JetstreamConsumer $jetstreamConsumer,
-    ) {}
+    ) {
+    }
 
     /**
      * Start consuming events from the AT Protocol.

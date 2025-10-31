@@ -7,7 +7,6 @@ namespace SocialDept\Signal\CAR;
 use Generator;
 use SocialDept\Signal\Binary\Reader;
 use SocialDept\Signal\Core\CID;
-use SocialDept\Signal\Core\CBOR;
 
 /**
  * CAR (Content Addressable aRchive) block reader.
@@ -49,7 +48,7 @@ class BlockReader
      */
     private function skipHeader(): void
     {
-        if (!$this->reader->hasMore()) {
+        if (! $this->reader->hasMore()) {
             return;
         }
 
@@ -67,7 +66,7 @@ class BlockReader
      */
     private function readBlock(): ?array
     {
-        if (!$this->reader->hasMore()) {
+        if (! $this->reader->hasMore()) {
             return null;
         }
 

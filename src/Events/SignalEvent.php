@@ -13,7 +13,8 @@ class SignalEvent implements EventContract
         public ?CommitEvent $commit = null,
         public ?IdentityEvent $identity = null,
         public ?AccountEvent $account = null,
-    ) {}
+    ) {
+    }
 
     public function isCommit(): bool
     {

@@ -76,7 +76,7 @@ class JetstreamConsumer
      */
     protected function connect(string $url): void
     {
-        $this->connection = new WebSocketConnection;
+        $this->connection = new WebSocketConnection();
 
         // Set up event handlers
         $this->connection
@@ -178,6 +178,7 @@ class JetstreamConsumer
 
         if ($this->reconnectAttempts >= $maxAttempts) {
             Log::error('Signal: Max reconnection attempts reached');
+
             throw new ConnectionException('Failed to reconnect to Jetstream after '.$maxAttempts.' attempts');
         }
 

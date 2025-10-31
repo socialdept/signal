@@ -15,14 +15,14 @@ class FileCursorStore implements CursorStore
 
         // Ensure directory exists
         $directory = dirname($this->path);
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
     }
 
     public function get(): ?int
     {
-        if (!File::exists($this->path)) {
+        if (! File::exists($this->path)) {
             return null;
         }
 

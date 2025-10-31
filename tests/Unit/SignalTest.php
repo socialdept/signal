@@ -12,7 +12,7 @@ class SignalTest extends TestCase
     /** @test */
     public function it_can_create_a_signal()
     {
-        $signal = new class extends Signal {
+        $signal = new class () extends Signal {
             public function eventTypes(): array
             {
                 return ['commit'];
@@ -31,7 +31,7 @@ class SignalTest extends TestCase
     /** @test */
     public function it_can_filter_by_exact_collection()
     {
-        $signal = new class extends Signal {
+        $signal = new class () extends Signal {
             public function eventTypes(): array
             {
                 return ['commit'];
@@ -66,7 +66,7 @@ class SignalTest extends TestCase
     /** @test */
     public function it_can_filter_by_wildcard_collection()
     {
-        $signalClass = new class extends Signal {
+        $signalClass = new class () extends Signal {
             public function eventTypes(): array
             {
                 return ['commit'];
@@ -84,7 +84,7 @@ class SignalTest extends TestCase
         };
 
         // Create registry and register the signal
-        $registry = new \SocialDept\Signal\Services\SignalRegistry;
+        $registry = new \SocialDept\Signal\Services\SignalRegistry();
         $registry->register($signalClass::class);
 
         // Test that it matches app.bsky.feed.post

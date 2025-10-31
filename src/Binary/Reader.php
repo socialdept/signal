@@ -17,7 +17,8 @@ class Reader
 
     public function __construct(
         private readonly string $data,
-    ) {}
+    ) {
+    }
 
     /**
      * Get current position in the data.
@@ -58,7 +59,7 @@ class Reader
      */
     public function peek(): int
     {
-        if (!$this->hasMore()) {
+        if (! $this->hasMore()) {
             throw new RuntimeException('Unexpected end of data');
         }
 

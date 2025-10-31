@@ -27,15 +27,15 @@ class SignalServiceProvider extends ServiceProvider
         // Register cursor store
         $this->app->singleton(CursorStore::class, function ($app) {
             return match (config('signal.cursor_storage')) {
-                'redis' => new RedisCursorStore,
-                'file' => new FileCursorStore,
-                default => new DatabaseCursorStore,
+                'redis' => new RedisCursorStore(),
+                'file' => new FileCursorStore(),
+                default => new DatabaseCursorStore(),
             };
         });
 
         // Register signal registry
         $this->app->singleton(SignalRegistry::class, function ($app) {
-            $registry = new SignalRegistry;
+            $registry = new SignalRegistry();
 
             // Register configured signals
             foreach (config('signal.signals', []) as $signal) {

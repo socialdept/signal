@@ -6,7 +6,6 @@ use Orchestra\Testbench\TestCase;
 use SocialDept\Signal\Events\CommitEvent;
 use SocialDept\Signal\Events\SignalEvent;
 use SocialDept\Signal\Services\SignalRegistry;
-use SocialDept\Signal\Signals\Signal;
 
 class SignalRegistryTest extends TestCase
 {

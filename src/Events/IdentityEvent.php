@@ -11,7 +11,8 @@ class IdentityEvent implements EventContract
         public ?string $handle = null,
         public int $seq = 0,
         public ?string $time = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

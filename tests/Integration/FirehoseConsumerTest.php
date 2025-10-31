@@ -64,7 +64,7 @@ class FirehoseConsumerTest extends TestCase
 
         // 'time' key
         $cbor .= "\x64time"; // Text string 'time'
-        $cbor .= "\x78\x182024-01-01T00:00:00Z"; // Text string (length 24)
+        $cbor .= "\x74" . "2024-01-01T00:00:00Z"; // Text string (length 20)
 
         // 'ops' key
         $cbor .= "\x63ops"; // Text string 'ops'
@@ -101,31 +101,28 @@ class FirehoseConsumerTest extends TestCase
         // Create a minimal CAR with header and one block
         $car = '';
 
-        // CAR header (minimal)
-        $headerCbor = "\xA1\x67version\x01"; // {version: 1}
+        // CAR header (minimal) - {version: 1}
+        $headerCbor = "\xA1\x67version\x01";
         $headerLength = strlen($headerCbor);
         $car .= chr($headerLength) . $headerCbor;
 
-        // Create a block with CID
-        $blockData = "\xA1\x64test\x65value"; // {test: "value"}
+        // Create a block with CID and data
+        // Block data: {test: "value"}
+        $blockData = "\xA1\x64test\x65value";
+
+        // Create CID: version 1, codec 0x71 (dag-cbor), sha256 hash
         $cid = CID::fromBinary("\x01\x71\x12\x20" . str_repeat("\x00", 32));
         $cidBinary = $cid->toBinary();
-        $cidLength = strlen($cidBinary);
 
-        $block = chr($cidLength) . $cidBinary . $blockData;
-        $blockLength = strlen($block);
+        // In CAR format: varint(cid_length + data_length), CID bytes, data bytes
+        $totalLength = strlen($cidBinary) + strlen($blockData);
+        $car .= chr($totalLength) . $cidBinary . $blockData;
 
-        // Add varint-encoded block length
-        $car .= chr($blockLength) . $block;
+        // Parse blocks
+        $blocks = CAR::blockMap($car, 'did:plc:test');
 
-        // This should not throw an error
-        $blocks = [];
-        foreach (CAR::blockMap($car, 'did:plc:test') as $key => $value) {
-            $blocks[$key] = $value;
-        }
-
-        // Even if empty, it shouldn't crash
         $this->assertIsArray($blocks);
+        $this->assertNotEmpty($blocks);
     }
 
     public function test_firehose_consumer_message_structure(): void
@@ -154,7 +151,7 @@ class FirehoseConsumerTest extends TestCase
         // Add required fields
         $payload .= "\x66blocks\x40"; // 'blocks' => empty byte string
         $payload .= "\x63ops\x80"; // 'ops' => []
-        $payload .= "\x64time\x78\x182024-01-01T00:00:00Z"; // 'time' => timestamp
+        $payload .= "\x64time\x74" . "2024-01-01T00:00:00Z"; // 'time' => timestamp
 
         // Combine header + payload
         $message = $header . $payload;
@@ -192,7 +189,7 @@ class FirehoseConsumerTest extends TestCase
         $payload .= "\x65since\x66origin"; // since: "origin"
         $payload .= "\x66blocks\x40"; // blocks: b''
         $payload .= "\x63ops\x80"; // ops: []
-        $payload .= "\x64time\x78\x182024-01-01T00:00:00Z"; // time: "2024-01-01T00:00:00Z"
+        $payload .= "\x64time\x74" . "2024-01-01T00:00:00Z"; // time: "2024-01-01T00:00:00Z"
 
         $message = $header . $payload;
 

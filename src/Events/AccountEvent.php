@@ -12,7 +12,8 @@ class AccountEvent implements EventContract
         public ?string $status = null,
         public int $seq = 0,
         public ?string $time = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

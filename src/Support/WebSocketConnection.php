@@ -64,6 +64,7 @@ class WebSocketConnection
                 if ($this->onError) {
                     ($this->onError)($e);
                 }
+
                 throw $e;
             }
         );
@@ -74,17 +75,19 @@ class WebSocketConnection
      */
     public function send(string $message): bool
     {
-        if (!$this->connected || !$this->connection) {
+        if (! $this->connected || ! $this->connection) {
             return false;
         }
 
         try {
             $this->connection->send($message);
+
             return true;
         } catch (\Exception $e) {
             if ($this->onError) {
                 ($this->onError)($e);
             }
+
             return false;
         }
     }
@@ -114,6 +117,7 @@ class WebSocketConnection
     public function onMessage(callable $callback): self
     {
         $this->onMessage = $callback(...);
+
         return $this;
     }
 
@@ -123,6 +127,7 @@ class WebSocketConnection
     public function onClose(callable $callback): self
     {
         $this->onClose = $callback(...);
+
         return $this;
     }
 
@@ -132,6 +137,7 @@ class WebSocketConnection
     public function onError(callable $callback): self
     {
         $this->onError = $callback(...);
+
         return $this;
     }
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace SocialDept\Signal\CAR;
 
 use Generator;
-use SocialDept\Signal\Core\CID;
 use SocialDept\Signal\Core\CBOR;
+use SocialDept\Signal\Core\CID;
 
 /**
  * Extract records from AT Protocol MST (Merkle Search Tree) blocks.
@@ -21,7 +21,8 @@ class RecordExtractor
     public function __construct(
         private readonly array $blocks,
         private readonly string $did,
-    ) {}
+    ) {
+    }
 
     /**
      * Extract all records from blocks.
@@ -47,7 +48,7 @@ class RecordExtractor
         $cidStr = $cid->toString();
 
         // Get block data
-        if (!isset($this->blocks[$cidStr])) {
+        if (! isset($this->blocks[$cidStr])) {
             // Block not found - might be a pruned tree, skip it
             return;
         }
@@ -57,7 +58,7 @@ class RecordExtractor
         // Decode CBOR block
         $node = CBOR::decode($blockData);
 
-        if (!is_array($node)) {
+        if (! is_array($node)) {
             return;
         }
 
@@ -69,7 +70,7 @@ class RecordExtractor
         // Process entries
         if (isset($node['e']) && is_array($node['e'])) {
             foreach ($node['e'] as $entry) {
-                if (!is_array($entry)) {
+                if (! is_array($entry)) {
                     continue;
                 }
 
@@ -121,7 +122,7 @@ class RecordExtractor
     {
         $cidStr = $cid->toString();
 
-        if (!isset($this->blocks[$cidStr])) {
+        if (! isset($this->blocks[$cidStr])) {
             return null;
         }
 

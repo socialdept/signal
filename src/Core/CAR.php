@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace SocialDept\Signal\Core;
 
-use Generator;
 use SocialDept\Signal\CAR\BlockReader;
-use SocialDept\Signal\CAR\RecordExtractor;
 
 /**
  * CAR (Content Addressable aRchive) facade.
@@ -29,6 +27,7 @@ class CAR
     {
         // Read all blocks from CAR
         $blockReader = new BlockReader($data);
+
         return $blockReader->getBlockMap();
     }
 
@@ -46,7 +45,7 @@ class CAR
 
         $decoded = CBOR::decode($firstBlock);
 
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             return null;
         }
 
@@ -67,7 +66,7 @@ class CAR
 
         $commit = CBOR::decode($firstBlock);
 
-        if (!is_array($commit)) {
+        if (! is_array($commit)) {
             return null;
         }
 

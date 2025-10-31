@@ -12,12 +12,16 @@ use SocialDept\Signal\Signals\Signal;
 
 class ProcessSignalJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
         protected Signal      $signal,
         protected SignalEvent $event,
-    ) {}
+    ) {
+    }
 
     public function handle(): void
     {

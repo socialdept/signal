@@ -2,8 +2,8 @@
 
 namespace {{ namespace }};
 
-use SocialDept\Signal\Events\SignalEvent;
-use SocialDept\Signal\Signals\Signal;
+use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\Signals\Signals\Signal;
 
 class {{ class }} extends Signal
 {

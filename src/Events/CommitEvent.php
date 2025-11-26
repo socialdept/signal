@@ -1,9 +1,9 @@
 <?php
 
-namespace SocialDept\Signals\Events;
+namespace SocialDept\AtpSignals\Events;
 
-use SocialDept\Signals\Contracts\EventContract;
-use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\AtpSignals\Contracts\EventContract;
+use SocialDept\AtpSignals\Enums\SignalCommitOperation;
 
 class CommitEvent implements EventContract
 {

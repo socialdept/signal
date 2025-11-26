@@ -1,22 +1,22 @@
 <?php
 
-namespace SocialDept\Signals;
+namespace SocialDept\AtpSignals;
 
 use Illuminate\Support\ServiceProvider;
-use SocialDept\Signals\Commands\ConsumeCommand;
-use SocialDept\Signals\Commands\InstallCommand;
-use SocialDept\Signals\Commands\ListSignalsCommand;
-use SocialDept\Signals\Commands\MakeSignalCommand;
-use SocialDept\Signals\Commands\TestSignalCommand;
-use SocialDept\Signals\Contracts\CursorStore;
-use SocialDept\Signals\Services\EventDispatcher;
-use SocialDept\Signals\Services\FirehoseConsumer;
-use SocialDept\Signals\Services\JetstreamConsumer;
-use SocialDept\Signals\Services\SignalManager;
-use SocialDept\Signals\Services\SignalRegistry;
-use SocialDept\Signals\Storage\DatabaseCursorStore;
-use SocialDept\Signals\Storage\FileCursorStore;
-use SocialDept\Signals\Storage\RedisCursorStore;
+use SocialDept\AtpSignals\Commands\ConsumeCommand;
+use SocialDept\AtpSignals\Commands\InstallCommand;
+use SocialDept\AtpSignals\Commands\ListSignalsCommand;
+use SocialDept\AtpSignals\Commands\MakeSignalCommand;
+use SocialDept\AtpSignals\Commands\TestSignalCommand;
+use SocialDept\AtpSignals\Contracts\CursorStore;
+use SocialDept\AtpSignals\Services\EventDispatcher;
+use SocialDept\AtpSignals\Services\FirehoseConsumer;
+use SocialDept\AtpSignals\Services\JetstreamConsumer;
+use SocialDept\AtpSignals\Services\SignalManager;
+use SocialDept\AtpSignals\Services\SignalRegistry;
+use SocialDept\AtpSignals\Storage\DatabaseCursorStore;
+use SocialDept\AtpSignals\Storage\FileCursorStore;
+use SocialDept\AtpSignals\Storage\RedisCursorStore;
 
 class SignalServiceProvider extends ServiceProvider
 {

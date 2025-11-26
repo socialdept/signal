@@ -33,8 +33,8 @@ Think of it as Laravel's event listeners, but for the decentralized social web.
 ## Quick Example
 
 ```php
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Signals\Signal;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Signals\Signal;
 
 class NewPostSignal extends Signal
 {

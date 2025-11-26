@@ -1,15 +1,15 @@
 <?php
 
-namespace SocialDept\Signals\Signals;
+namespace SocialDept\AtpSignals\Signals;
 
-use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\AtpSignals\Events\SignalEvent;
 
 abstract class Signal
 {
     /**
      * Define which event types to listen for.
      *
-     * @return array<string|\SocialDept\Signals\Enums\SignalEventType>
+     * @return array<string|\SocialDept\AtpSignals\Enums\SignalEventType>
      */
     abstract public function eventTypes(): array;
 
@@ -42,7 +42,7 @@ abstract class Signal
      * - [SignalCommitOperation::Delete] - Only handle deletes
      * - null - Handle all operations (default)
      *
-     * @return array<string|\SocialDept\Signals\Enums\SignalCommitOperation>|null
+     * @return array<string|\SocialDept\AtpSignals\Enums\SignalCommitOperation>|null
      */
     public function operations(): ?array
     {

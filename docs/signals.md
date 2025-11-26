@@ -21,8 +21,8 @@ Every Signal extends the base `Signal` class:
 
 namespace App\Signals;
 
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Signals\Signal;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Signals\Signal;
 
 class MySignal extends Signal
 {
@@ -83,8 +83,8 @@ You can also create Signals manually in `app/Signals/`:
 
 namespace App\Signals;
 
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Signals\Signal;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Signals\Signal;
 
 class ManualSignal extends Signal
 {
@@ -111,7 +111,7 @@ Signals can listen for three types of AT Protocol events:
 Repository commits represent changes to user data:
 
 ```php
-use SocialDept\Signals\Enums\SignalEventType;
+use SocialDept\AtpSignals\Enums\SignalEventType;
 
 public function eventTypes(): array
 {
@@ -339,7 +339,7 @@ public function handle(SignalEvent $event): void
 ### Operation Checking (Commit Events)
 
 ```php
-use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\AtpSignals\Enums\SignalCommitOperation;
 
 public function handle(SignalEvent $event): void
 {

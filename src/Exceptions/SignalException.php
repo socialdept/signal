@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signals\Exceptions;
+namespace SocialDept\AtpSignals\Exceptions;
 
 class SignalException extends \Exception
 {

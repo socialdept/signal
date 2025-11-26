@@ -1,14 +1,14 @@
 <?php
 
-namespace SocialDept\Signals\Jobs;
+namespace SocialDept\AtpSignals\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Signals\Signal;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Signals\Signal;
 
 class ProcessSignalJob implements ShouldQueue
 {

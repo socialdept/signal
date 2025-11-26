@@ -1,8 +1,8 @@
 <?php
 
-namespace SocialDept\Signals\Events;
+namespace SocialDept\AtpSignals\Events;
 
-use SocialDept\Signals\Contracts\EventContract;
+use SocialDept\AtpSignals\Contracts\EventContract;
 
 class SignalEvent implements EventContract
 {
@@ -41,7 +41,7 @@ class SignalEvent implements EventContract
         return $this->commit?->record;
     }
 
-    public function getOperation(): ?\SocialDept\Signals\Enums\SignalCommitOperation
+    public function getOperation(): ?\SocialDept\AtpSignals\Enums\SignalCommitOperation
     {
         return $this->commit?->operation;
     }

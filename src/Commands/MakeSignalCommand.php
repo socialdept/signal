@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signals\Commands;
+namespace SocialDept\AtpSignals\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Input\InputOption;

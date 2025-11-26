@@ -1,13 +1,13 @@
 <?php
 
-namespace SocialDept\Signals\Commands;
+namespace SocialDept\AtpSignals\Commands;
 
 use BackedEnum;
 use Exception;
 use Illuminate\Console\Command;
-use SocialDept\Signals\Services\FirehoseConsumer;
-use SocialDept\Signals\Services\JetstreamConsumer;
-use SocialDept\Signals\Services\SignalRegistry;
+use SocialDept\AtpSignals\Services\FirehoseConsumer;
+use SocialDept\AtpSignals\Services\JetstreamConsumer;
+use SocialDept\AtpSignals\Services\SignalRegistry;
 
 class ConsumeCommand extends Command
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signals\Tests\Unit;
+namespace SocialDept\AtpSignals\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
-use SocialDept\Signals\Core\CID;
+use SocialDept\AtpSignals\Core\CID;
 
 class CIDTest extends TestCase
 {

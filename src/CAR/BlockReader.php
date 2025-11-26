@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signals\CAR;
+namespace SocialDept\AtpSignals\CAR;
 
 use Generator;
-use SocialDept\Signals\Binary\Reader;
-use SocialDept\Signals\Core\CID;
+use SocialDept\AtpSignals\Binary\Reader;
+use SocialDept\AtpSignals\Core\CID;
 
 /**
  * CAR (Content Addressable aRchive) block reader.

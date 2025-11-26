@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signals\CBOR;
+namespace SocialDept\AtpSignals\CBOR;
 
 use RuntimeException;
-use SocialDept\Signals\Binary\Reader;
-use SocialDept\Signals\Core\CID;
+use SocialDept\AtpSignals\Binary\Reader;
+use SocialDept\AtpSignals\Core\CID;
 
 /**
  * CBOR (Concise Binary Object Representation) decoder.

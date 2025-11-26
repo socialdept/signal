@@ -1,9 +1,9 @@
 <?php
 
-namespace SocialDept\Signals\Storage;
+namespace SocialDept\AtpSignals\Storage;
 
 use Illuminate\Support\Facades\File;
-use SocialDept\Signals\Contracts\CursorStore;
+use SocialDept\AtpSignals\Contracts\CursorStore;
 
 class FileCursorStore implements CursorStore
 {

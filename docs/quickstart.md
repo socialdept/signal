@@ -33,8 +33,8 @@ Open the generated file and update it:
 
 namespace App\Signals;
 
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Signals\Signal;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Signals\Signal;
 use Illuminate\Support\Facades\Log;
 
 class NewPostSignal extends Signal
@@ -154,7 +154,7 @@ Now that you've built your first Signal, let's make it more useful.
 Track specific operations only:
 
 ```php
-use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\AtpSignals\Enums\SignalCommitOperation;
 
 public function operations(): ?array
 {
@@ -242,9 +242,9 @@ Let's build a simple engagement tracker:
 namespace App\Signals;
 
 use App\Models\EngagementMetric;
-use SocialDept\Signals\Enums\SignalCommitOperation;
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Signals\Signal;
+use SocialDept\AtpSignals\Enums\SignalCommitOperation;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Signals\Signal;
 
 class EngagementTrackerSignal extends Signal
 {

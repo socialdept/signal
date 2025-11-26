@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signals\CAR;
+namespace SocialDept\AtpSignals\CAR;
 
 use Generator;
-use SocialDept\Signals\Core\CBOR;
-use SocialDept\Signals\Core\CID;
+use SocialDept\AtpSignals\Core\CBOR;
+use SocialDept\AtpSignals\Core\CID;
 
 /**
  * Extract records from AT Protocol MST (Merkle Search Tree) blocks.

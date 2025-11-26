@@ -1,12 +1,12 @@
 <?php
 
-namespace SocialDept\Signals\Services;
+namespace SocialDept\AtpSignals\Services;
 
 use Illuminate\Support\Facades\Log;
-use SocialDept\Signals\Contracts\CursorStore;
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Exceptions\ConnectionException;
-use SocialDept\Signals\Support\WebSocketConnection;
+use SocialDept\AtpSignals\Contracts\CursorStore;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Exceptions\ConnectionException;
+use SocialDept\AtpSignals\Support\WebSocketConnection;
 
 class JetstreamConsumer
 {

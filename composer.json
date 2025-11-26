@@ -19,21 +19,21 @@
     },
     "autoload": {
         "psr-4": {
-            "SocialDept\\Signals\\": "src/"
+            "SocialDept\\AtpSignals\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "SocialDept\\Signals\\Tests\\": "tests/"
+            "SocialDept\\AtpSignals\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "SocialDept\\Signals\\SignalServiceProvider"
+                "SocialDept\\AtpSignals\\SignalServiceProvider"
             ],
             "aliases": {
-                "Signal": "SocialDept\\Signals\\Facades\\Signal"
+                "Signal": "SocialDept\\AtpSignals\\Facades\\Signal"
             }
         }
     }

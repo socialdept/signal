@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signals\Tests\Integration;
+namespace SocialDept\AtpSignals\Tests\Integration;
 
 use Orchestra\Testbench\TestCase;
-use SocialDept\Signals\Core\CAR;
-use SocialDept\Signals\Core\CBOR;
-use SocialDept\Signals\Core\CID;
+use SocialDept\AtpSignals\Core\CAR;
+use SocialDept\AtpSignals\Core\CBOR;
+use SocialDept\AtpSignals\Core\CID;
 
 class FirehoseConsumerTest extends TestCase
 {

@@ -64,8 +64,8 @@ Test your Signals in isolation.
 namespace Tests\Unit\Signals;
 
 use App\Signals\NewPostSignal;
-use SocialDept\Signals\Events\CommitEvent;
-use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\AtpSignals\Events\CommitEvent;
+use SocialDept\AtpSignals\Events\SignalEvent;
 use Tests\TestCase;
 
 class NewPostSignalTest extends TestCase
@@ -186,8 +186,8 @@ namespace Tests\Feature\Signals;
 use App\Models\Post;
 use App\Signals\StorePostSignal;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use SocialDept\Signals\Events\CommitEvent;
-use SocialDept\Signals\Events\SignalEvent;
+use SocialDept\AtpSignals\Events\CommitEvent;
+use SocialDept\AtpSignals\Events\SignalEvent;
 use Tests\TestCase;
 
 class StorePostSignalTest extends TestCase

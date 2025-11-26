@@ -1,11 +1,11 @@
 <?php
 
-namespace SocialDept\Signals\Services;
+namespace SocialDept\AtpSignals\Services;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
-use SocialDept\Signals\Events\SignalEvent;
-use SocialDept\Signals\Jobs\ProcessSignalJob;
+use SocialDept\AtpSignals\Events\SignalEvent;
+use SocialDept\AtpSignals\Jobs\ProcessSignalJob;
 
 class EventDispatcher
 {

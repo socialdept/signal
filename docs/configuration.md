@@ -539,7 +539,7 @@ SIGNAL_QUEUE=signal
 Change configuration at runtime:
 
 ```php
-use SocialDept\Signals\Facades\Signal;
+use SocialDept\AtpSignals\Facades\Signal;
 
 // Override mode
 config(['signal.mode' => 'firehose']);
@@ -578,7 +578,7 @@ $mode = config('signal.mode'); // 'jetstream' or 'firehose'
 Or via Facade:
 
 ```php
-use SocialDept\Signals\Facades\Signal;
+use SocialDept\AtpSignals\Facades\Signal;
 
 $mode = Signal::getMode();
 ```

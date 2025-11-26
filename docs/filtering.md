@@ -30,7 +30,7 @@ The most basic filter - required for all Signals.
 ### Available Event Types
 
 ```php
-use SocialDept\Signals\Enums\SignalEventType;
+use SocialDept\AtpSignals\Enums\SignalEventType;
 
 public function eventTypes(): array
 {
@@ -210,7 +210,7 @@ Filter by operation type (only applies to commit events).
 ### Available Operations
 
 ```php
-use SocialDept\Signals\Enums\SignalCommitOperation;
+use SocialDept\AtpSignals\Enums\SignalCommitOperation;
 
 public function operations(): ?array
 {

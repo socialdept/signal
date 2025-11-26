@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signals\Enums;
+namespace SocialDept\AtpSignals\Enums;
 
 enum SignalCommitOperation: string
 {

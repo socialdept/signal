@@ -318,7 +318,7 @@ SIGNAL_MODE=jetstream
 ### Option 2: Runtime Configuration
 
 ```php
-use SocialDept\Signals\Facades\Signal;
+use SocialDept\AtpSignals\Facades\Signal;
 
 // Set mode dynamically
 config(['signal.mode' => 'jetstream']);
@@ -467,7 +467,7 @@ $mode = config('signal.mode'); // 'jetstream' or 'firehose'
 Or via Facade:
 
 ```php
-use SocialDept\Signals\Facades\Signal;
+use SocialDept\AtpSignals\Facades\Signal;
 
 $mode = Signal::getMode();
 ```

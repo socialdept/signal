@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SocialDept\Signals\Core;
+namespace SocialDept\AtpSignals\Core;
 
 use RuntimeException;
-use SocialDept\Signals\Binary\Reader;
-use SocialDept\Signals\Binary\Varint;
+use SocialDept\AtpSignals\Binary\Reader;
+use SocialDept\AtpSignals\Binary\Varint;
 
 /**
  * Content Identifier (CID) parser for IPLD.

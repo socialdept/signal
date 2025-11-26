@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialDept\Signals\Services;
+namespace SocialDept\AtpSignals\Services;
 
 use InvalidArgumentException;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace SocialDept\Signals\Events;
+namespace SocialDept\AtpSignals\Events;
 
-use SocialDept\Signals\Contracts\EventContract;
+use SocialDept\AtpSignals\Contracts\EventContract;
 
 class IdentityEvent implements EventContract
 {

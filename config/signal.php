@@ -8,9 +8,9 @@ return [
     |
     | The mode determines which AT Protocol stream to consume:
     | - 'jetstream': JSON events with server-side collection filtering
-    |                (only standard app.bsky.* collections get create/update)
+    |                (supports all collections including third-party lexicons)
     | - 'firehose':  Raw CBOR events with client-side filtering
-    |                (all collections including custom ones get all operations)
+    |                (comprehensive access to all network events)
     |
     */
     'mode' => env('SIGNAL_MODE', 'jetstream'),

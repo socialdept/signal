@@ -51,7 +51,7 @@ class JetstreamConsumer
         Log::info('Signal: Starting Jetstream consumer', [
             'url' => $url,
             'cursor' => $cursor > 0 ? $cursor : 'none (fresh start)',
-            'mode' => 'firehose',
+            'mode' => 'jetstream',
         ]);
 
         $this->connect($url);
@@ -223,15 +223,32 @@ class JetstreamConsumer
         }
 
         // Add collection filters from all registered signals
-        $collections = $this->signalRegistry->all()
-            ->flatMap(fn ($signal) => $signal->collections() ?? [])
-            ->unique()
-            ->filter()
-            ->values();
+        // If ANY signal wants all collections (returns null), don't filter at all
+        $signals = $this->signalRegistry->all();
+        $hasWildcardSignal = $signals->contains(fn ($signal) => $signal->collections() === null);
 
-        if ($collections->isNotEmpty()) {
-            foreach ($collections as $collection) {
-                $params[] = 'wantedCollections='.urlencode($collection);
+        Log::debug('Signal: Building Jetstream URL', [
+            'registered_signals' => $signals->map(fn ($s) => get_class($s))->values()->toArray(),
+            'has_wildcard_signal' => $hasWildcardSignal,
+        ]);
+
+        if (! $hasWildcardSignal) {
+            $collections = $signals
+                ->flatMap(fn ($signal) => $signal->collections() ?? [])
+                ->unique()
+                ->filter()
+                ->values();
+
+            Log::debug('Signal: Collection filters', [
+                'collections' => $collections->toArray(),
+            ]);
+
+            if ($collections->isNotEmpty()) {
+                foreach ($collections as $collection) {
+                    // Don't encode wildcards - Jetstream expects literal *
+                    $encoded = str_replace('%2A', '*', urlencode($collection));
+                    $params[] = 'wantedCollections='.$encoded;
+                }
             }
         }
 

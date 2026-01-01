@@ -101,7 +101,7 @@ Only receive the events you care about:
 JSON parsing is faster than CBOR/CAR decoding:
 
 - **Jetstream**: Simple JSON deserialization
-- **Firehose**: Complex CBOR/CAR decoding with `revolution/laravel-bluesky`
+- **Firehose**: Native CBOR/CAR decoding (no external dependencies)
 
 ### Limitations
 
@@ -214,24 +214,14 @@ Receive the full event stream:
 
 **3. More Processing Overhead**
 
-Complex CBOR/CAR decoding:
+Native CBOR/CAR decoding:
 
 ```php
-// Signal automatically handles decoding using revolution/laravel-bluesky
+// Signal handles decoding natively with no external dependencies
 $record = $event->getRecord(); // Decoded from CBOR/CAR
 ```
 
-Processing is more CPU-intensive than Jetstream's JSON.
-
-**4. Requires revolution/laravel-bluesky**
-
-Firehose mode depends on the `revolution/laravel-bluesky` package for decoding:
-
-```bash
-composer require revolution/bluesky
-```
-
-Signal handles this dependency automatically.
+Processing is more CPU-intensive than Jetstream's JSON, but requires no additional packages.
 
 ### Example Configuration
 

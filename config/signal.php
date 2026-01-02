@@ -106,7 +106,7 @@ return [
     |
     */
     'queue' => [
-        'connection' => env('SIGNAL_QUEUE_CONNECTION', 'default'),
+        'connection' => env('SIGNAL_QUEUE_CONNECTION'),
         'queue' => env('SIGNAL_QUEUE', 'signal'),
     ],
 

@@ -43,10 +43,11 @@ class EventDispatcher
                 } else {
                     $this->dispatchSync($signal, $event);
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error('Signal: Error dispatching to signal', [
                     'signal' => get_class($signal),
                     'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
 
                 $signal->failed($event, $e);

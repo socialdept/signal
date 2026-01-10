@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpSignals\Support;
 
+use Illuminate\Support\Facades\Log;
 use Ratchet\Client\Connector;
 use Ratchet\Client\WebSocket;
 use Ratchet\RFC6455\Messaging\MessageInterface;
@@ -38,23 +39,46 @@ class WebSocketConnection
                 $this->connection = $conn;
                 $this->connected = true;
 
-                // Register event handlers
+                // Register event handlers with protective try/catch
+                // Uncaught exceptions in React callbacks crash the event loop silently
                 $conn->on('message', function (MessageInterface $msg) {
-                    if ($this->onMessage) {
-                        ($this->onMessage)($msg->getPayload());
+                    try {
+                        if ($this->onMessage) {
+                            ($this->onMessage)($msg->getPayload());
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error('Signal: Uncaught exception in message handler', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
                     }
                 });
 
                 $conn->on('close', function ($code = null, $reason = null) {
                     $this->connected = false;
-                    if ($this->onClose) {
-                        ($this->onClose)($code, $reason);
+                    try {
+                        if ($this->onClose) {
+                            ($this->onClose)($code, $reason);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error('Signal: Uncaught exception in close handler', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
                     }
                 });
 
                 $conn->on('error', function (\Exception $e) {
-                    if ($this->onError) {
-                        ($this->onError)($e);
+                    try {
+                        if ($this->onError) {
+                            ($this->onError)($e);
+                        }
+                    } catch (\Throwable $handlerError) {
+                        Log::error('Signal: Uncaught exception in error handler', [
+                            'original_error' => $e->getMessage(),
+                            'handler_error' => $handlerError->getMessage(),
+                            'trace' => $handlerError->getTraceAsString(),
+                        ]);
                     }
                 });
 

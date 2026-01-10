@@ -25,7 +25,20 @@ class EventDispatcher
 
         foreach ($signals as $signal) {
             try {
-                if ($signal->shouldQueue()) {
+                $queued = $signal->shouldQueue();
+
+                if ($this->shouldDebug()) {
+                    Log::debug('Signal: Dispatching', [
+                        'signal' => class_basename($signal),
+                        'kind' => $event->kind,
+                        'collection' => $event->commit?->collection,
+                        'operation' => $event->commit?->operation,
+                        'did' => $event->did,
+                        'queued' => $queued,
+                    ]);
+                }
+
+                if ($queued) {
                     $this->dispatchToQueue($signal, $event);
                 } else {
                     $this->dispatchSync($signal, $event);
@@ -39,6 +52,14 @@ class EventDispatcher
                 $signal->failed($event, $e);
             }
         }
+    }
+
+    /**
+     * Check if debug logging is enabled.
+     */
+    protected function shouldDebug(): bool
+    {
+        return config('signal.debug', false);
     }
 
     /**

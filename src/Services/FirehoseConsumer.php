@@ -29,6 +29,8 @@ class FirehoseConsumer
 
     protected bool $shouldStop = false;
 
+    protected ?\Exception $lastError = null;
+
     public function __construct(
         CursorStore $cursorStore,
         SignalRegistry $signalRegistry,
@@ -45,6 +47,7 @@ class FirehoseConsumer
     public function start(?int $cursor = null): void
     {
         $this->shouldStop = false;
+        $this->lastError = null;
 
         // Get cursor from storage if not explicitly provided
         // null = use stored cursor, 0 = start fresh (no cursor), >0 = specific cursor
@@ -116,6 +119,16 @@ class FirehoseConsumer
 
         // Run the event loop (blocking)
         $this->connection->run();
+
+        // Check if we exited due to a fatal error
+        if ($this->lastError) {
+            throw $this->lastError;
+        }
+
+        // If we get here without intentionally stopping, something went wrong
+        if (! $this->shouldStop) {
+            throw new ConnectionException('Firehose connection closed unexpectedly');
+        }
     }
 
     /**
@@ -414,7 +427,10 @@ class FirehoseConsumer
         if ($this->reconnectAttempts >= $maxAttempts) {
             Log::error('Signal: Max reconnection attempts reached');
 
-            throw new ConnectionException('Failed to reconnect to Firehose after '.$maxAttempts.' attempts');
+            $this->lastError = new ConnectionException('Failed to reconnect to Firehose after '.$maxAttempts.' attempts');
+            $this->connection?->stop();
+
+            return;
         }
 
         $this->reconnectAttempts++;

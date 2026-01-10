@@ -141,4 +141,15 @@ return [
         'channel' => env('SIGNAL_LOG_CHANNEL', 'stack'),
         'level' => env('SIGNAL_LOG_LEVEL', 'info'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Debug Mode
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, logs debug information about signal handling including
+    | which signals are matched and dispatched for incoming events.
+    |
+    */
+    'debug' => env('SIGNAL_DEBUG', false),
 ];

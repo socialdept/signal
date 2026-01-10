@@ -58,6 +58,16 @@ class JetstreamConsumer
         ]);
 
         $this->connect($url);
+
+        // Check if we exited due to a fatal error (after all reconnection attempts)
+        if ($this->lastError) {
+            throw $this->lastError;
+        }
+
+        // If we get here without intentionally stopping, something went wrong
+        if (! $this->shouldStop) {
+            throw new ConnectionException('Jetstream connection closed unexpectedly');
+        }
     }
 
     /**
@@ -112,16 +122,6 @@ class JetstreamConsumer
 
         // Run the event loop (blocking)
         $this->connection->run();
-
-        // Check if we exited due to a fatal error
-        if ($this->lastError) {
-            throw $this->lastError;
-        }
-
-        // If we get here without intentionally stopping, something went wrong
-        if (! $this->shouldStop) {
-            throw new ConnectionException('Jetstream connection closed unexpectedly');
-        }
     }
 
     /**

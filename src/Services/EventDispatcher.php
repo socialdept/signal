@@ -28,7 +28,7 @@ class EventDispatcher
                 $queued = $signal->shouldQueue();
 
                 if ($this->shouldDebug()) {
-                    Log::debug('Signal: Dispatching', [
+                    Log::debug('[Signal] Dispatching', [
                         'signal' => class_basename($signal),
                         'kind' => $event->kind,
                         'collection' => $event->commit?->collection,
@@ -44,7 +44,7 @@ class EventDispatcher
                     $this->dispatchSync($signal, $event);
                 }
             } catch (\Throwable $e) {
-                Log::error('Signal: Error dispatching to signal', [
+                Log::error('[Signal] Error dispatching to signal', [
                     'signal' => get_class($signal),
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),

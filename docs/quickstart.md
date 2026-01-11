@@ -374,6 +374,19 @@ To start from a specific cursor:
 php artisan signal:consume --cursor=123456789
 ```
 
+### Troubleshooting Missing Events
+
+If you're not seeing expected events, you may have a stale cursor from a previous session. Use the `--fresh` flag to start from the current position:
+
+```bash
+php artisan signal:consume --fresh
+```
+
+This is especially useful when:
+- You've added new collection filters to your Signals
+- You're testing with a newly created Signal
+- Events seem to be missing or delayed
+
 ## What's Next?
 
 You now know the basics of building Signals! Explore more advanced topics:

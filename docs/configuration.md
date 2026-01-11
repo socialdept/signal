@@ -60,8 +60,8 @@ SIGNAL_MODE=jetstream
 ```
 
 **When to use each:**
-- **Jetstream**: Standard Bluesky collections, production efficiency
-- **Firehose**: Custom collections, AppViews, comprehensive indexing
+- **Jetstream**: Most applications, production efficiency
+- **Firehose**: Raw CBOR/CAR access, comprehensive indexing
 
 [Learn more about modes →](modes.md)
 
@@ -369,8 +369,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Choose between 'jetstream' (JSON events) or 'firehose' (CBOR/CAR events).
-    | Jetstream is more efficient for standard Bluesky collections.
-    | Firehose is required for custom collections.
+    | Jetstream provides simplified JSON events with server-side filtering.
+    | Firehose provides raw CBOR/CAR data with comprehensive access.
     |
     | Options: 'jetstream', 'firehose'
     |
@@ -627,7 +627,7 @@ SIGNAL_QUEUE=signal-production
 If you change defaults, document why:
 
 ```php
-// We use Firehose mode because we have custom collections
+// We use Firehose mode because we need raw CBOR/CAR data access
 'mode' => env('SIGNAL_MODE', 'firehose'),
 ```
 

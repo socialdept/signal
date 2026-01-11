@@ -51,7 +51,7 @@ class JetstreamConsumer
         // If cursor is explicitly 0, don't send it (fresh start)
         $url = $this->buildWebSocketUrl($cursor > 0 ? $cursor : null);
 
-        Log::info('Signal: Starting Jetstream consumer', [
+        Log::info('[Signal] Starting Jetstream consumer', [
             'url' => $url,
             'cursor' => $cursor > 0 ? $cursor : 'none (fresh start)',
             'mode' => 'jetstream',
@@ -81,7 +81,7 @@ class JetstreamConsumer
             $this->connection->close();
         }
 
-        Log::info('Signal: Jetstream consumer stopped');
+        Log::info('[Signal] Jetstream consumer stopped');
     }
 
     /**
@@ -107,10 +107,10 @@ class JetstreamConsumer
         $this->connection->connect($url)->then(
             function () {
                 $this->reconnectAttempts = 0;
-                Log::info('Signal: Connected to Jetstream successfully');
+                Log::info('[Signal] Connected to Jetstream successfully');
             },
             function (\Exception $e) {
-                Log::error('Signal: Could not connect to Jetstream', [
+                Log::error('[Signal] Could not connect to Jetstream', [
                     'error' => $e->getMessage(),
                 ]);
 
@@ -133,7 +133,7 @@ class JetstreamConsumer
             $data = json_decode($message, true);
 
             if (! $data) {
-                Log::warning('Signal: Failed to decode message');
+                Log::warning('[Signal] Failed to decode message');
 
                 return;
             }
@@ -147,7 +147,7 @@ class JetstreamConsumer
             $this->eventDispatcher->dispatch($event);
 
         } catch (\Exception $e) {
-            Log::error('Signal: Error handling message', [
+            Log::error('[Signal] Error handling message', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -159,7 +159,7 @@ class JetstreamConsumer
      */
     protected function handleClose(?int $code, ?string $reason): void
     {
-        Log::warning('Signal: Connection closed', [
+        Log::warning('[Signal] Connection closed', [
             'code' => $code,
             'reason' => $reason ?: 'none',
             'reconnect_attempts' => $this->reconnectAttempts,
@@ -176,7 +176,7 @@ class JetstreamConsumer
      */
     protected function handleError(\Exception $error): void
     {
-        Log::error('Signal: Connection error', [
+        Log::error('[Signal] Connection error', [
             'error' => $error->getMessage(),
             'trace' => $error->getTraceAsString(),
         ]);
@@ -190,7 +190,7 @@ class JetstreamConsumer
         $maxAttempts = config('signal.connection.reconnect_attempts', 5);
 
         if ($this->reconnectAttempts >= $maxAttempts) {
-            Log::error('Signal: Max reconnection attempts reached');
+            Log::error('[Signal] Max reconnection attempts reached');
 
             $this->lastError = new ConnectionException('Failed to reconnect to Jetstream after '.$maxAttempts.' attempts');
             $this->connection?->stop();
@@ -209,7 +209,7 @@ class JetstreamConsumer
             $maxDelay
         );
 
-        Log::info('Signal: Attempting to reconnect', [
+        Log::info('[Signal] Attempting to reconnect', [
             'attempt' => $this->reconnectAttempts,
             'max_attempts' => $maxAttempts,
             'delay' => $delay,
@@ -243,7 +243,7 @@ class JetstreamConsumer
         $signals = $this->signalRegistry->all();
         $hasWildcardSignal = $signals->contains(fn ($signal) => $signal->collections() === null);
 
-        Log::debug('Signal: Building Jetstream URL', [
+        Log::debug('[Signal] Building Jetstream URL', [
             'registered_signals' => $signals->map(fn ($s) => get_class($s))->values()->toArray(),
             'has_wildcard_signal' => $hasWildcardSignal,
         ]);
@@ -255,7 +255,7 @@ class JetstreamConsumer
                 ->filter()
                 ->values();
 
-            Log::debug('Signal: Collection filters', [
+            Log::debug('[Signal] Collection filters', [
                 'collections' => $collections->toArray(),
             ]);
 

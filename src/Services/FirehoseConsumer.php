@@ -58,7 +58,7 @@ class FirehoseConsumer
         // If cursor is explicitly 0, don't send it (fresh start)
         $url = $this->buildWebSocketUrl($cursor > 0 ? $cursor : null);
 
-        Log::info('Signal: Starting Firehose consumer', [
+        Log::info('[Signal] Starting Firehose consumer', [
             'url' => $url,
             'cursor' => $cursor > 0 ? $cursor : 'none (fresh start)',
             'mode' => 'firehose',
@@ -88,7 +88,7 @@ class FirehoseConsumer
             $this->connection->close();
         }
 
-        Log::info('Signal: Firehose consumer stopped');
+        Log::info('[Signal] Firehose consumer stopped');
     }
 
     /**
@@ -114,10 +114,10 @@ class FirehoseConsumer
         $this->connection->connect($url)->then(
             function () {
                 $this->reconnectAttempts = 0;
-                Log::info('Signal: Connected to Firehose successfully');
+                Log::info('[Signal] Connected to Firehose successfully');
             },
             function (\Exception $e) {
-                Log::error('Signal: Could not connect to Firehose', [
+                Log::error('[Signal] Could not connect to Firehose', [
                     'error' => $e->getMessage(),
                 ]);
 
@@ -141,7 +141,7 @@ class FirehoseConsumer
             [$header, $remainder] = rescue(fn () => CBOR::decodeFirst($message), [[], '']);
 
             if (! Arr::has($header, ['t', 'op'])) {
-                Log::debug('Signal: Invalid header', ['header' => $header]);
+                Log::debug('[Signal] Invalid header', ['header' => $header]);
 
                 return;
             }
@@ -156,7 +156,7 @@ class FirehoseConsumer
             $payload = rescue(fn () => CBOR::decode($remainder ?? []));
 
             if (! $payload) {
-                Log::warning('Signal: Failed to decode payload');
+                Log::warning('[Signal] Failed to decode payload');
 
                 return;
             }
@@ -170,7 +170,7 @@ class FirehoseConsumer
             };
 
         } catch (\Exception $e) {
-            Log::error('Signal: Error handling Firehose message', [
+            Log::error('[Signal] Error handling Firehose message', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -198,7 +198,7 @@ class FirehoseConsumer
         $blocks = [];
         if (! empty($records)) {
             $blocks = rescue(fn () => CAR::blockMap($records, $did), [], function (\Throwable $e) {
-                Log::warning('Signal: Failed to parse CAR blocks', [
+                Log::warning('[Signal] Failed to parse CAR blocks', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
                 ]);
@@ -318,7 +318,7 @@ class FirehoseConsumer
     {
         // Validate required fields
         if (! isset($payload['did'])) {
-            Log::debug('Signal: Invalid identity payload - missing did', ['payload' => $payload]);
+            Log::debug('[Signal] Invalid identity payload - missing did', ['payload' => $payload]);
 
             return;
         }
@@ -356,7 +356,7 @@ class FirehoseConsumer
     {
         // Validate required fields
         if (! isset($payload['did'], $payload['active'])) {
-            Log::debug('Signal: Invalid account payload - missing required fields', ['payload' => $payload]);
+            Log::debug('[Signal] Invalid account payload - missing required fields', ['payload' => $payload]);
 
             return;
         }
@@ -394,7 +394,7 @@ class FirehoseConsumer
      */
     protected function handleClose(?int $code, ?string $reason): void
     {
-        Log::warning('Signal: Connection closed', [
+        Log::warning('[Signal] Connection closed', [
             'code' => $code,
             'reason' => $reason ?: 'none',
             'reconnect_attempts' => $this->reconnectAttempts,
@@ -411,7 +411,7 @@ class FirehoseConsumer
      */
     protected function handleError(\Exception $error): void
     {
-        Log::error('Signal: Connection error', [
+        Log::error('[Signal] Connection error', [
             'error' => $error->getMessage(),
             'trace' => $error->getTraceAsString(),
         ]);
@@ -425,7 +425,7 @@ class FirehoseConsumer
         $maxAttempts = config('signal.connection.reconnect_attempts', 5);
 
         if ($this->reconnectAttempts >= $maxAttempts) {
-            Log::error('Signal: Max reconnection attempts reached');
+            Log::error('[Signal] Max reconnection attempts reached');
 
             $this->lastError = new ConnectionException('Failed to reconnect to Firehose after '.$maxAttempts.' attempts');
             $this->connection?->stop();
@@ -444,7 +444,7 @@ class FirehoseConsumer
             $maxDelay
         );
 
-        Log::info('Signal: Attempting to reconnect', [
+        Log::info('[Signal] Attempting to reconnect', [
             'attempt' => $this->reconnectAttempts,
             'max_attempts' => $maxAttempts,
             'delay' => $delay,

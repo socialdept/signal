@@ -103,7 +103,7 @@ class RecordExtractor
                             ];
                         } else {
                             // Debug: log when key format doesn't match expected pattern
-                            \Illuminate\Support\Facades\Log::debug('Signal: MST key parse failed', [
+                            \Illuminate\Support\Facades\Log::debug('[Signal] MST key parse failed', [
                                 'fullKey' => $fullKey,
                                 'parts' => $parts,
                                 'did' => $this->did,

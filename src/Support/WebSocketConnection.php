@@ -47,7 +47,7 @@ class WebSocketConnection
                             ($this->onMessage)($msg->getPayload());
                         }
                     } catch (\Throwable $e) {
-                        Log::error('Signal: Uncaught exception in message handler', [
+                        Log::error('[Signal] Uncaught exception in message handler', [
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString(),
                         ]);
@@ -61,7 +61,7 @@ class WebSocketConnection
                             ($this->onClose)($code, $reason);
                         }
                     } catch (\Throwable $e) {
-                        Log::error('Signal: Uncaught exception in close handler', [
+                        Log::error('[Signal] Uncaught exception in close handler', [
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString(),
                         ]);
@@ -74,7 +74,7 @@ class WebSocketConnection
                             ($this->onError)($e);
                         }
                     } catch (\Throwable $handlerError) {
-                        Log::error('Signal: Uncaught exception in error handler', [
+                        Log::error('[Signal] Uncaught exception in error handler', [
                             'original_error' => $e->getMessage(),
                             'handler_error' => $handlerError->getMessage(),
                             'trace' => $handlerError->getTraceAsString(),

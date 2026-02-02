@@ -39,6 +39,10 @@ class RecordExtractor
     /**
      * Recursively walk MST tree.
      *
+     * MST uses prefix compression where each entry's `p` value indicates how many
+     * characters to keep from the PREVIOUS ENTRY'S full key within the same node,
+     * not the parent prefix. This is critical for correct key reconstruction.
+     *
      * @param CID $cid Current node CID
      * @param string $prefix Path prefix accumulated from parent nodes
      * @return Generator<string, array>
@@ -67,6 +71,10 @@ class RecordExtractor
             yield from $this->walkTree($node['l'], $prefix);
         }
 
+        // Track the previous entry's full key for prefix calculation.
+        // For the first entry in a node, we use the parent prefix.
+        $prevKey = $prefix;
+
         // Process entries
         if (isset($node['e']) && is_array($node['e'])) {
             foreach ($node['e'] as $entry) {
@@ -74,10 +82,14 @@ class RecordExtractor
                     continue;
                 }
 
-                // Build full key from prefix + entry key
+                // Build full key from PREVIOUS ENTRY'S key (not parent prefix).
+                // The `p` value indicates how many characters to keep from prevKey.
                 $entryPrefix = $entry['p'] ?? 0;
                 $keyPart = $entry['k'] ?? '';
-                $fullKey = substr($prefix, 0, $entryPrefix) . $keyPart;
+                $fullKey = substr($prevKey, 0, $entryPrefix) . $keyPart;
+
+                // Update prevKey for the next entry in this node
+                $prevKey = $fullKey;
 
                 // If entry has a tree link, walk it
                 if (isset($entry['t']) && $entry['t'] instanceof CID) {
@@ -101,13 +113,6 @@ class RecordExtractor
                                 'cid' => $recordCid->toString(),
                                 'value' => $record,
                             ];
-                        } else {
-                            // Debug: log when key format doesn't match expected pattern
-                            \Illuminate\Support\Facades\Log::debug('[Signal] MST key parse failed', [
-                                'fullKey' => $fullKey,
-                                'parts' => $parts,
-                                'did' => $this->did,
-                            ]);
                         }
                     }
                 }

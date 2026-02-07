@@ -187,7 +187,7 @@ class JetstreamConsumer
      */
     protected function attemptReconnect(): void
     {
-        $maxAttempts = config('signal.connection.reconnect_attempts', 5);
+        $maxAttempts = config('atp-signals.connection.reconnect_attempts', 5);
 
         if ($this->reconnectAttempts >= $maxAttempts) {
             Log::error('[Signal] Max reconnection attempts reached');
@@ -201,8 +201,8 @@ class JetstreamConsumer
         $this->reconnectAttempts++;
 
         // Calculate exponential backoff delay
-        $baseDelay = config('signal.connection.reconnect_delay', 5);
-        $maxDelay = config('signal.connection.max_reconnect_delay', 60);
+        $baseDelay = config('atp-signals.connection.reconnect_delay', 5);
+        $maxDelay = config('atp-signals.connection.max_reconnect_delay', 60);
 
         $delay = min(
             $baseDelay * (2 ** ($this->reconnectAttempts - 1)),
@@ -228,7 +228,7 @@ class JetstreamConsumer
      */
     protected function buildWebSocketUrl(?int $cursor = null): string
     {
-        $baseUrl = config('signal.websocket_url', 'wss://jetstream2.us-east.bsky.network');
+        $baseUrl = config('atp-signals.websocket_url', 'wss://jetstream2.us-east.bsky.network');
         $url = rtrim($baseUrl, '/').'/subscribe';
 
         $params = [];

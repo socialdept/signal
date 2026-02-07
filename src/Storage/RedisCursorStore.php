@@ -12,8 +12,8 @@ class RedisCursorStore implements CursorStore
 
     public function __construct()
     {
-        $this->connection = config('signal.cursor_config.redis.connection', 'default');
-        $this->key = config('signal.cursor_config.redis.key', 'signal:cursor');
+        $this->connection = config('atp-signals.cursor_config.redis.connection', 'default');
+        $this->key = config('atp-signals.cursor_config.redis.key', 'signal:cursor');
     }
 
     public function get(): ?int

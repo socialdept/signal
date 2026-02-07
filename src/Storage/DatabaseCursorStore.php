@@ -13,8 +13,8 @@ class DatabaseCursorStore implements CursorStore
 
     public function __construct()
     {
-        $this->table = config('signal.cursor_config.database.table', 'signal_cursors');
-        $this->connection = config('signal.cursor_config.database.connection');
+        $this->table = config('atp-signals.cursor_config.database.table', 'signal_cursors');
+        $this->connection = config('atp-signals.cursor_config.database.connection');
     }
 
     public function get(): ?int

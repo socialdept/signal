@@ -42,7 +42,7 @@ class ConsumeCommand extends Command
 
     private function determineMode(): ?string
     {
-        $mode = $this->option('mode') ?? config('signal.mode', 'jetstream');
+        $mode = $this->option('mode') ?? config('atp-signals.mode', 'jetstream');
 
         if (! in_array($mode, ['jetstream', 'firehose'])) {
             $this->error("Invalid mode: {$mode}. Must be 'jetstream' or 'firehose'.");
@@ -60,7 +60,7 @@ class ConsumeCommand extends Command
         $signalCount = $registry->all()->count();
 
         if ($signalCount === 0) {
-            $this->warn('No signals registered. Create signals in `app/Signals` or register them in `config/signal.php`.');
+            $this->warn('No signals registered. Create signals in `app/Signals` or register them in `config/atp-signals.php`.');
 
             return false;
         }

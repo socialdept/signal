@@ -5,9 +5,9 @@ namespace SocialDept\AtpSignals\Services;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use SocialDept\AtpSignals\Contracts\CursorStore;
-use SocialDept\AtpSignals\Core\CAR;
-use SocialDept\AtpSignals\Core\CBOR;
-use SocialDept\AtpSignals\Core\CID;
+use SocialDept\AtpCbor\Core\CAR;
+use SocialDept\AtpCbor\Core\CBOR;
+use SocialDept\AtpCbor\Core\CID;
 use SocialDept\AtpSignals\Events\AccountEvent;
 use SocialDept\AtpSignals\Events\CommitEvent;
 use SocialDept\AtpSignals\Events\IdentityEvent;
@@ -422,7 +422,7 @@ class FirehoseConsumer
      */
     protected function attemptReconnect(): void
     {
-        $maxAttempts = config('signal.connection.reconnect_attempts', 5);
+        $maxAttempts = config('atp-signals.connection.reconnect_attempts', 5);
 
         if ($this->reconnectAttempts >= $maxAttempts) {
             Log::error('[Signal] Max reconnection attempts reached');
@@ -436,8 +436,8 @@ class FirehoseConsumer
         $this->reconnectAttempts++;
 
         // Calculate exponential backoff delay
-        $baseDelay = config('signal.connection.reconnect_delay', 5);
-        $maxDelay = config('signal.connection.max_reconnect_delay', 60);
+        $baseDelay = config('atp-signals.connection.reconnect_delay', 5);
+        $maxDelay = config('atp-signals.connection.max_reconnect_delay', 60);
 
         $delay = min(
             $baseDelay * (2 ** ($this->reconnectAttempts - 1)),
@@ -464,7 +464,7 @@ class FirehoseConsumer
      */
     protected function buildWebSocketUrl(?int $cursor = null): string
     {
-        $host = config('signal.firehose.host', 'bsky.network');
+        $host = config('atp-signals.firehose.host', 'bsky.network');
         $url = "wss://{$host}/xrpc/com.atproto.sync.subscribeRepos";
 
         $params = [];

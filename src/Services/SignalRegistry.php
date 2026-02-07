@@ -43,12 +43,12 @@ class SignalRegistry
      */
     public function discover(): void
     {
-        if (! config('signal.auto_discovery.enabled', true)) {
+        if (! config('atp-signals.auto_discovery.enabled', true)) {
             return;
         }
 
-        $path = config('signal.auto_discovery.path', app_path('Signals'));
-        $namespace = config('signal.auto_discovery.namespace', 'App\\Signals');
+        $path = config('atp-signals.auto_discovery.path', app_path('Signals'));
+        $namespace = config('atp-signals.auto_discovery.namespace', 'App\\Signals');
 
         if (! File::exists($path)) {
             return;

@@ -33,7 +33,7 @@ class SignalManager
      */
     public function getMode(): string
     {
-        return config('signal.mode', 'jetstream');
+        return config('atp-signals.mode', 'jetstream');
     }
 
     /**

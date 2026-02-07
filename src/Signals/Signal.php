@@ -85,7 +85,7 @@ abstract class Signal
      */
     public function queueConnection(): ?string
     {
-        return config('signal.queue.connection');
+        return config('atp-signals.queue.connection');
     }
 
     /**
@@ -93,7 +93,7 @@ abstract class Signal
      */
     public function queue(): ?string
     {
-        return config('signal.queue.queue');
+        return config('atp-signals.queue.queue');
     }
 
     /**

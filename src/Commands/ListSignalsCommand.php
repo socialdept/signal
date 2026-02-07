@@ -41,7 +41,7 @@ class ListSignalsCommand extends Command
     private function displayNoSignalsWarning(): void
     {
         $this->warn('No signals registered.');
-        $this->info('Create signals in app/Signals or register them in config/signal.php');
+        $this->info('Create signals in app/Signals or register them in config/atp-signals.php');
     }
 
     private function displaySignalCount(int $count): void

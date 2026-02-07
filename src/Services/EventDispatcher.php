@@ -60,7 +60,7 @@ class EventDispatcher
      */
     protected function shouldDebug(): bool
     {
-        return config('signal.debug', false);
+        return config('atp-signals.debug', false);
     }
 
     /**

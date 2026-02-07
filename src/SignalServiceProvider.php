@@ -22,11 +22,11 @@ class SignalServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/signal.php', 'signal');
+        $this->mergeConfigFrom(__DIR__.'/../config/atp-signals.php', 'atp-signals');
 
         // Register cursor store
         $this->app->singleton(CursorStore::class, function ($app) {
-            return match (config('signal.cursor_storage')) {
+            return match (config('atp-signals.cursor_storage')) {
                 'redis' => new RedisCursorStore(),
                 'file' => new FileCursorStore(),
                 default => new DatabaseCursorStore(),
@@ -38,7 +38,7 @@ class SignalServiceProvider extends ServiceProvider
             $registry = new SignalRegistry();
 
             // Register configured signals
-            foreach (config('signal.signals', []) as $signal) {
+            foreach (config('atp-signals.signals', []) as $signal) {
                 $registry->register($signal);
             }
 
@@ -82,8 +82,8 @@ class SignalServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Publish config
             $this->publishes([
-                __DIR__.'/../config/signal.php' => config_path('signal.php'),
-            ], 'signal-config');
+                __DIR__.'/../config/atp-signals.php' => config_path('atp-signals.php'),
+            ], 'atp-signals-config');
 
             // Publish migrations
             $this->publishes([

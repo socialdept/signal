@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace SocialDept\AtpSignals\Tests\Integration;
 
 use Orchestra\Testbench\TestCase;
-use SocialDept\AtpSignals\Core\CAR;
-use SocialDept\AtpSignals\Core\CBOR;
-use SocialDept\AtpSignals\Core\CID;
+use SocialDept\AtpCbor\Core\CAR;
+use SocialDept\AtpCbor\Core\CBOR;
+use SocialDept\AtpCbor\Core\CID;
 
 class FirehoseConsumerTest extends TestCase
 {

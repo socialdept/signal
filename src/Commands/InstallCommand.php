@@ -29,7 +29,7 @@ class InstallCommand extends Command
     {
         $this->comment('Publishing configuration...');
         $this->call('vendor:publish', [
-            '--tag' => 'signal-config',
+            '--tag' => 'atp-signals-config',
         ]);
         $this->info('✓ Configuration published');
     }
@@ -66,7 +66,7 @@ class InstallCommand extends Command
     private function displayNextSteps(): void
     {
         $this->line('Next steps:');
-        $this->line('1. Review the config file: config/signal.php');
+        $this->line('1. Review the config file: config/atp-signals.php');
         $this->line('2. Create your first signal: php artisan make:signal NewPostSignal');
         $this->line('3. Start consuming events: php artisan signal:consume');
     }

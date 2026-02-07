@@ -11,7 +11,7 @@ class FileCursorStore implements CursorStore
 
     public function __construct()
     {
-        $this->path = config('signal.cursor_config.file.path', storage_path('signal/cursor.json'));
+        $this->path = config('atp-signals.cursor_config.file.path', storage_path('signal/cursor.json'));
 
         // Ensure directory exists
         $directory = dirname($this->path);

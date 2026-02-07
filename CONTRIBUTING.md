@@ -19,10 +19,10 @@ When requesting or submitting new features, first consider whether it might be u
 ### Before Filing an Issue
 
 - Search existing issues to avoid duplicates
-- Check the [documentation](docs/) to ensure it's not a usage question
+- Check the [documentation](README.md) to ensure it's not a usage question
 - Provide a clear title and description
 - Include steps to reproduce the issue
-- Specify your environment (PHP version, Laravel version, Signal version, mode)
+- Specify your environment (PHP version, Laravel version, Schema version)
 - Include relevant code samples and full error messages
 
 ### Before Submitting a Pull Request
@@ -39,15 +39,10 @@ When requesting or submitting new features, first consider whether it might be u
 ## Requirements
 
 - **[PSR-12 Coding Standard](https://www.php-fig.org/psr/psr-12/)** - Run `vendor/bin/php-cs-fixer fix` to automatically fix code style issues.
-
 - **Add tests** - Your patch won't be accepted if it doesn't have tests. All tests must use [PHPUnit](https://phpunit.de/).
-
-- **Document any change in behaviour** - Make sure the `README.md`, `docs/`, and any other relevant documentation are kept up-to-date.
-
+- **Document any change in behavior** - Make sure the `README.md` and any other relevant documentation are kept up-to-date.
 - **Consider our release cycle** - We follow [SemVer v2.0.0](https://semver.org/). Randomly breaking public APIs is not an option.
-
 - **One pull request per feature** - If you want to do more than one thing, send multiple pull requests.
-
 - **Send coherent history** - Make sure each individual commit in your pull request is meaningful. If you had to make multiple intermediate commits while developing, please [squash them](https://www.git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Changing-Multiple-Commit-Messages) before submitting.
 
 ## Running Tests
@@ -58,10 +53,8 @@ vendor/bin/phpunit
 
 ## Code Style
 
-Signal follows PSR-12 coding standard. Run PHP CS Fixer before submitting:
+Schema follows PSR-12 coding standard. Run PHP CS Fixer before submitting:
 
 ```bash
 vendor/bin/php-cs-fixer fix
 ```
-
-**Happy coding**!
